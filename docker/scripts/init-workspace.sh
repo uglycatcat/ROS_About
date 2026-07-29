@@ -1,8 +1,6 @@
 #!/bin/bash
-# ─────────────────────────────────────────────────────────
-# 自动初始化挂载工作区 /workspace/ros2_ws（幂等）
-# 由 start.sh 在进入交互 shell 前调用，无需手动执行
-# ─────────────────────────────────────────────────────────
+# 初始化 ROS 工作区（幂等），由 container_init.sh 调用
+# MuJoCo release 请另行运行 docker/mujoco_setup.sh
 set -e
 
 WS_DIR="/workspace/ros2_ws"

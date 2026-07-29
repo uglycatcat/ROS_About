@@ -1,24 +1,18 @@
 # PetBot 开发环境（ROS2 Humble + MuJoCo）
 
-基于 `osrf/ros:humble-desktop` 的 Docker 开发容器，含 Gazebo、MoveIt2、MuJoCo、OpenCV 与 NVIDIA GPU 支持。
+在 `docker/` 下二选一：
 
-**前置：** Docker、NVIDIA 驱动 + Container Toolkit。
+| 脚本 | 适用 |
+|------|------|
+| `./container_init.sh` | 已有镜像 / 国内源可直连。需要 MuJoCo 时容器内再跑 `./docker/mujoco_setup.sh`（下最新 release） |
+| `./full_ws_init.sh` | 全新环境 + 本机 VPN；交互代理端口 → 拉镜像 → 起容器 → 装最新 MuJoCo release |
 
-## 使用
+结束后均在容器 `/workspace/ros2_ws`（宿主机 `~/ros2_ws`）。
+
+日常进入：
 
 ```bash
-cd ~/ros2_ws/docker
-./start.sh
+docker exec -it -w /workspace/ros2_ws petbot_ws bash
 ```
 
-自动完成：构建镜像 → 启动容器 `petbot_ws` → 初始化工作区 → 进入 bash。  
-终端落在 `/workspace/ros2_ws`（宿主机 `~/ros2_ws`），ROS2 环境已 source。
-
-| 项目 | 说明 |
-|------|------|
-| 挂载 | 宿主机 `~/` → `/workspace` |
-| 网络 | host（便于 ROS2 发现） |
-| 外设 | privileged，可访问串口/摄像头 |
-| GUI | 窗口无法显示时，宿主机执行 `xhost +local:` |
-
-首次构建约 15–30 分钟；之后再跑 `./start.sh` 会直接进入已有环境。
+挂载：`~/` → `/workspace`。源：阿里云 / 清华。`ROS_DOMAIN_ID=42`。

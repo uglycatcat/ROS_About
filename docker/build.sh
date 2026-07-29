@@ -1,7 +1,5 @@
 #!/bin/bash
-# ─────────────────────────────────────────────────────────
-# 仅构建镜像（不启动）。日常请用 ./start.sh
-# ─────────────────────────────────────────────────────────
+# 仅构建镜像。日常用 ./container_init.sh
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -10,8 +8,6 @@ cd "$SCRIPT_DIR"
 export USER_UID="$(id -u)"
 export USER_GID="$(id -g)"
 
-echo ">>> 构建镜像 ros2-mujoco-dev:latest (UID=${USER_UID} GID=${USER_GID})"
+echo ">>> 构建镜像 ros2-mujoco-dev:latest"
 DOCKER_BUILDKIT=1 docker compose build
-
-echo ""
-echo "构建完成。进入开发环境请运行: ./start.sh"
+echo "完成。进入环境: ./container_init.sh"

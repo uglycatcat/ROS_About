@@ -2,4 +2,4 @@
 .gitignore
 *.md
 build/
-configs/.gitkeep
+mujoco/
