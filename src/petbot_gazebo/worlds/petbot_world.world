@@ -1,12 +1,45 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
   <world name="petbot_world">
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
-    <include>
-      <uri>model://sun</uri>
-    </include>
+    <!-- 内嵌地面与光照，不依赖 model:// 路径 -->
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+        <collision name="collision">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>100 100</size></plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode><mu>100</mu><mu2>50</mu2></ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="visual">
+          <geometry>
+            <plane><normal>0 0 1</normal><size>100 100</size></plane>
+          </geometry>
+          <material>
+            <ambient>0.8 0.8 0.8 1</ambient>
+            <diffuse>0.8 0.8 0.8 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
 
     <gravity>0 0 -9.8</gravity>
     <physics type="ode">
@@ -15,7 +48,6 @@
       <real_time_update_rate>1000</real_time_update_rate>
     </physics>
 
-    <!-- 简易方形房间外墙 -->
     <model name="wall_north">
       <static>true</static>
       <pose>0 3.0 0.5 0 0 0</pose>
@@ -69,7 +101,6 @@
       </link>
     </model>
 
-    <!-- 室内障碍物，便于 SLAM 建图 -->
     <model name="box1">
       <static>true</static>
       <pose>1.2 1.0 0.25 0 0 0.3</pose>

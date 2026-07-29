@@ -13,30 +13,23 @@ def generate_launch_description():
     pkg_slam = get_package_share_directory('petbot_slam')
     pkg_gazebo = get_package_share_directory('petbot_gazebo')
 
-    use_rviz = LaunchConfiguration('use_rviz')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-
     slam_params = os.path.join(pkg_slam, 'config', 'mapper_params_online_async.yaml')
     rviz_config = os.path.join(pkg_slam, 'rviz', 'slam.rviz')
 
-    return LaunchDescription([
-        DeclareLaunchArgument('use_rviz', default_value='true'),
-        DeclareLaunchArgument('use_sim_time', default_value='true'),
-        DeclareLaunchArgument('x', default_value='0.0'),
-        DeclareLaunchArgument('y', default_value='0.0'),
-        DeclareLaunchArgument('yaw', default_value='0.0'),
+    use_sim_time = LaunchConfiguration('use_sim_time')
 
-        # Gazebo + 机器人（不另开 RViz，由本 launch 统一开 SLAM 配置）
+    return LaunchDescription([
+        DeclareLaunchArgument('rviz', default_value='true',
+                              description='同步启动 RViz（第三人称跟随机器人）'),
+        DeclareLaunchArgument('use_sim_time', default_value='true'),
+        DeclareLaunchArgument('follow_goal', default_value='true',
+                              description='是否启用 RViz 目标点导航'),
+
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource(
                 os.path.join(pkg_gazebo, 'launch', 'gazebo.launch.py')
             ),
-            launch_arguments={
-                'use_rviz': 'false',
-                'x': LaunchConfiguration('x'),
-                'y': LaunchConfiguration('y'),
-                'yaw': LaunchConfiguration('yaw'),
-            }.items(),
+            launch_arguments={'gazebo_rviz': 'false'}.items(),
         ),
 
         Node(
@@ -47,12 +40,23 @@ def generate_launch_description():
             parameters=[slam_params, {'use_sim_time': use_sim_time}],
         ),
 
+        # RViz「2D Goal Pose」→ /goal_pose → 简单跟随
+        Node(
+            package='petbot_slam',
+            executable='simple_goal_follower.py',
+            name='simple_goal_follower',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+            condition=IfCondition(LaunchConfiguration('follow_goal')),
+        ),
+
         Node(
             package='rviz2',
             executable='rviz2',
+            name='rviz2',
             arguments=['-d', rviz_config],
             parameters=[{'use_sim_time': use_sim_time}],
-            condition=IfCondition(use_rviz),
+            condition=IfCondition(LaunchConfiguration('rviz')),
             output='screen',
         ),
     ])

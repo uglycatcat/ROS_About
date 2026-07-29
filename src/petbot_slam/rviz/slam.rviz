@@ -16,52 +16,65 @@ Visualization Manager:
       Enabled: true
       Topic:
         Value: /map
+        Durability Policy: Transient Local
       Color Scheme: map
-      Alpha: 0.7
-    - Alpha: 1
-      Class: rviz_default_plugins/RobotModel
+      Alpha: 1
+      Draw Behind: true
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
       Description Topic:
         Value: /robot_description
-      Enabled: true
-      Name: RobotModel
-    - Class: rviz_default_plugins/TF
-      Enabled: true
-      Name: TF
-      Frame Timeout: 15
-      Show Axes: true
-      Show Names: false
+      Alpha: 1
     - Class: rviz_default_plugins/LaserScan
       Name: LaserScan
       Enabled: true
       Topic:
         Value: /scan
-      Size (m): 0.04
-      Style: Flat Squares
-      Color: 255; 0; 0
-    - Class: rviz_default_plugins/Odometry
-      Name: Odometry
+      Style: Points
+      Size (Pixels): 3
+      Color Transformer: FlatColor
+      Color: 0; 200; 255
+      Alpha: 0.6
+    - Class: rviz_default_plugins/Pose
+      Name: GoalPose
       Enabled: true
       Topic:
+        Value: /goal_pose
+      Shape: Arrow
+      Color: 0; 255; 0
+      Alpha: 1
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+    - Class: rviz_default_plugins/Odometry
+      Name: Odometry
+      Enabled: false
+      Topic:
         Value: /odom
-      Keep: 100
   Global Options:
+    Background Color: 48; 48; 48
     Fixed Frame: map
   Name: root
   Tools:
     - Class: rviz_default_plugins/Interact
     - Class: rviz_default_plugins/MoveCamera
     - Class: rviz_default_plugins/Select
-    - Class: rviz_default_plugins/PublishPoint
     - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Value: /initialpose
     - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Value: /goal_pose
   Value: true
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Distance: 10.0
-      Name: Current View
-      Pitch: 1.0
-      Yaw: 0.8
+      Class: rviz_default_plugins/ThirdPersonFollower
+      Name: ThirdPersonFollower
+      Target Frame: base_link
+      Distance: 4.0
+      Pitch: 0.6
+      Yaw: 3.14
 Window Geometry:
   Height: 900
   Width: 1400
