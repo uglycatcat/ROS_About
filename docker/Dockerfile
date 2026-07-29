@@ -30,6 +30,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     python3-venv \
     python3-vcstool \
+    python3-colcon-common-extensions \
     # 编辑器/终端
     nano \
     tmux \
@@ -139,26 +140,30 @@ ARG USERNAME=ros
 ARG USER_UID=1000
 ARG USER_GID=1000
 
-RUN groupadd --gid $USER_GID $USERNAME \
+RUN apt-get update && apt-get install -y --no-install-recommends sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers.d/$USERNAME
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # ─── bashrc 环境配置 ──────────────────────────────────────────
 RUN echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \
+    && echo 'if [ -f /workspace/ros2_ws/install/setup.bash ]; then source /workspace/ros2_ws/install/setup.bash; fi' >> /home/$USERNAME/.bashrc \
     && echo 'source /usr/share/colcon_cd/function/colcon_cd.sh' >> /home/$USERNAME/.bashrc \
-    && echo 'export _colcon_cd_root=/opt/ros/humble' >> /home/$USERNAME/.bashrc \
+    && echo 'export _colcon_cd_root=/workspace/ros2_ws' >> /home/$USERNAME/.bashrc \
     && echo 'export RCUTILS_COLORIZED_OUTPUT=1' >> /home/$USERNAME/.bashrc \
     && echo 'export RCUTILS_CONSOLE_OUTPUT_FORMAT="[{severity} {time}] [{name}]: {message}"' >> /home/$USERNAME/.bashrc \
     && echo 'alias ll="ls -lhF"' >> /home/$USERNAME/.bashrc \
     && echo 'alias la="ls -lAhF"' >> /home/$USERNAME/.bashrc \
     && echo 'alias l="ls -CF"' >> /home/$USERNAME/.bashrc \
     && echo 'alias grep="grep --color=auto"' >> /home/$USERNAME/.bashrc \
-    && echo 'alias cb="cd ~/ros2_ws && colcon build --symlink-install"' >> /home/$USERNAME/.bashrc \
+    && echo 'alias cb="cd /workspace/ros2_ws && colcon build --symlink-install"' >> /home/$USERNAME/.bashrc \
     && echo 'alias cbs="colcon build --symlink-install"' >> /home/$USERNAME/.bashrc \
     && echo 'alias cbt="colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"' >> /home/$USERNAME/.bashrc \
     && echo 'export EDITOR=vim' >> /home/$USERNAME/.bashrc \
-    && echo 'export PS1="\[\033[01;32m\]\u@ros2\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /home/$USERNAME/.bashrc \
-    && echo 'export DISPLAY=:1' >> /home/$USERNAME/.bashrc \
+    && echo 'export PS1="\[\033[01;32m\]\u@petbot\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ "' >> /home/$USERNAME/.bashrc \
+    && echo 'export DISPLAY="${DISPLAY:-:1}"' >> /home/$USERNAME/.bashrc \
     && echo 'export ROS_DOMAIN_ID=0' >> /home/$USERNAME/.bashrc \
     && echo 'export HISTSIZE=10000' >> /home/$USERNAME/.bashrc \
     && echo 'export HISTFILESIZE=20000' >> /home/$USERNAME/.bashrc \
@@ -168,6 +173,6 @@ RUN echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \
 RUN rm -rf /var/lib/apt/lists/* /tmp/*
 
 USER $USERNAME
-WORKDIR /home/$USERNAME
+WORKDIR /workspace/ros2_ws
 
 ENV DEBIAN_FRONTEND=

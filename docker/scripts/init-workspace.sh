@@ -1,31 +1,18 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────
-# 容器内首次运行：初始化 ROS2 工作区
-# 用法：在容器内执行
-#   bash ~/host_home/ros2_ws/docker/scripts/init-workspace.sh
+# 自动初始化挂载工作区 /workspace/ros2_ws（幂等）
+# 由 start.sh 在进入交互 shell 前调用，无需手动执行
 # ─────────────────────────────────────────────────────────
 set -e
 
-WS_DIR="$HOME/ros2_ws"
+WS_DIR="/workspace/ros2_ws"
 
-echo ">>> 创建 ROS2 工作区: $WS_DIR"
 mkdir -p "$WS_DIR/src"
 cd "$WS_DIR"
 
-# 安装依赖工具
-sudo apt-get update -qq
-sudo apt-get install -y -qq python3-colcon-common-extensions 2>/dev/null || true
-
-# 初始化工作区
-cd "$WS_DIR"
-colcon build --symlink-install
-
-# 写入环境加载
-echo "source $WS_DIR/install/setup.bash" >> ~/.bashrc
-
-echo ""
-echo "==========================================="
-echo " ROS2 工作区已就绪: $WS_DIR"
-echo " 下次进入容器自动 source"
-echo " 手动编译: cd $WS_DIR && colcon build"
-echo "==========================================="
+if [ ! -f "$WS_DIR/install/setup.bash" ]; then
+    echo ">>> 首次初始化工作区: $WS_DIR"
+    colcon build --symlink-install
+else
+    echo ">>> 工作区已就绪: $WS_DIR"
+fi

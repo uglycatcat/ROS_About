@@ -15,8 +15,5 @@ if [ "$(id -u $USERNAME)" != "$USER_UID" ]; then
     sudo groupmod -g $USER_GID $USERNAME 2>/dev/null || true
 fi
 
-# 确保挂载的宿主机 home 目录可写
-sudo mkdir -p /home/ros/host_home
-sudo chown -R $USER_UID:$USER_GID /home/ros/host_home
-
+# /workspace 由 compose 挂载宿主机 ~/；UID 对齐后无需 chown 整个目录
 exec "$@"

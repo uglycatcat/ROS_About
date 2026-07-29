@@ -1,21 +1,21 @@
-version: "3.9"
-
 services:
-  ros2-humble:
+  petbot_ws:
     build:
       context: .
       dockerfile: Dockerfile
       args:
-        USER_UID: "1000"
-        USER_GID: "1000"
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
     image: ros2-mujoco-dev:latest
-    container_name: ros2-humble
+    container_name: petbot_ws
 
-    # 宿主 home 挂载为容器工作目录
+    # 宿主机 ~/ → 容器 /workspace
     volumes:
-      - ~/:/home/ros/host_home:rw
+      - ~/:/workspace:rw
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - /run/user/1000/gdm/Xauthority:/tmp/.Xauthority:ro
+      - ${XAUTH_PATH:-${HOME}/.Xauthority}:/tmp/.Xauthority:ro
+
+    working_dir: /workspace/ros2_ws
 
     # NVIDIA GPU 直通
     deploy:
@@ -26,12 +26,9 @@ services:
               count: all
               capabilities: [gpu, compute, utility, graphic, display]
 
-    # 外设直通
+    # 显示 / 输入；串口与摄像头走 privileged 访问宿主机 /dev
     devices:
       - /dev/dri:/dev/dri
-      - /dev/ttyUSB0:/dev/ttyUSB0
-      - /dev/ttyACM0:/dev/ttyACM0
-      - /dev/video0:/dev/video0
       - /dev/input:/dev/input
 
     # ROS2 节点发现需要 host 网络
@@ -50,4 +47,5 @@ services:
 
     stdin_open: true
     tty: true
-    command: /bin/bash
+    # 保持容器常驻；交互 shell 由 start.sh 的 docker exec 进入
+    command: ["sleep", "infinity"]
