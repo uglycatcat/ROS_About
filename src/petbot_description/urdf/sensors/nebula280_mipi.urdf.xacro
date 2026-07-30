@@ -1,0 +1,208 @@
+<?xml version="1.0"?>
+<!--
+  Nebula280MIPI 完整模组仿真（结构光 sToF + 调制 ToF mToF）
+  公开规格参照同系列 Nebula 240 mipi：
+    模组约 39.2×17×16.1 mm，Baseline 25 mm
+    sToF：10~120 cm，≥248×120@10fps，FOV≈H100°×V54°
+    mToF：至约 8 m，≥248×180@10fps，FOV≈H100°×V75°
+  输出：彩色 / 红外 / 近距深度 / 远距深度 / 点云
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="nebula280_mipi" params="parent *origin">
+    <xacro:property name="n280_l" value="0.0392"/>
+    <xacro:property name="n280_w" value="0.0170"/>
+    <xacro:property name="n280_h" value="0.0161"/>
+    <xacro:property name="n280_mass" value="0.035"/>
+
+    <link name="nebula280_link">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <!-- L 沿车宽(Y)，W 沿光轴(X)，H 沿高度(Z) -->
+          <box size="${n280_w} ${n280_l} ${n280_h}"/>
+        </geometry>
+        <material name="nebula_cyan">
+          <color rgba="0.05 0.72 0.78 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="${n280_w} ${n280_l} ${n280_h}"/>
+        </geometry>
+      </collision>
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="${n280_mass}"/>
+        <inertia
+          ixx="${(n280_mass/12.0)*(n280_l*n280_l + n280_h*n280_h)}" ixy="0" ixz="0"
+          iyy="${(n280_mass/12.0)*(n280_w*n280_w + n280_h*n280_h)}" iyz="0"
+          izz="${(n280_mass/12.0)*(n280_w*n280_w + n280_l*n280_l)}"/>
+      </inertial>
+    </link>
+
+    <joint name="nebula280_joint" type="fixed">
+      <parent link="${parent}"/>
+      <child link="nebula280_link"/>
+      <xacro:insert_block name="origin"/>
+    </joint>
+
+    <!-- REP-103 optical frame: Z forward, X right, Y down.
+         Gazebo camera/depth points are published in this convention;
+         keep sensor on nebula280_link and only stamp messages with optical. -->
+    <link name="nebula280_optical_frame"/>
+    <joint name="nebula280_optical_joint" type="fixed">
+      <parent link="nebula280_link"/>
+      <child link="nebula280_optical_frame"/>
+      <origin xyz="0 0 0" rpy="${-pi/2} 0 ${-pi/2}"/>
+    </joint>
+
+    <gazebo reference="nebula280_link">
+      <material>Gazebo/Turquoise</material>
+
+      <!-- ========== RGB 彩色 ========== -->
+      <sensor name="nebula280_color" type="camera">
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <update_rate>10</update_rate>
+        <camera name="color">
+          <horizontal_fov>1.74533</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>360</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>20.0</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <plugin name="nebula280_color_controller" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/nebula280</namespace>
+            <remapping>color/image_raw:=color/image_raw</remapping>
+            <remapping>color/camera_info:=color/camera_info</remapping>
+          </ros>
+          <camera_name>color</camera_name>
+          <frame_name>nebula280_optical_frame</frame_name>
+        </plugin>
+      </sensor>
+
+      <!-- ========== IR 红外（单通道近似） ========== -->
+      <sensor name="nebula280_ir" type="camera">
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <update_rate>10</update_rate>
+        <camera name="ir">
+          <horizontal_fov>1.74533</horizontal_fov>
+          <image>
+            <width>248</width>
+            <height>180</height>
+            <format>L8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>12.0</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </camera>
+        <plugin name="nebula280_ir_controller" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/nebula280</namespace>
+            <remapping>ir/image_raw:=ir/image_raw</remapping>
+            <remapping>ir/camera_info:=ir/camera_info</remapping>
+          </ros>
+          <camera_name>ir</camera_name>
+          <frame_name>nebula280_optical_frame</frame_name>
+        </plugin>
+      </sensor>
+
+      <!-- ========== sToF：近距避障（10~120 cm，248×120，VFOV≈54°） ========== -->
+      <sensor name="nebula280_stof" type="depth">
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <update_rate>10</update_rate>
+        <camera name="stof">
+          <horizontal_fov>1.74533</horizontal_fov>
+          <image>
+            <width>248</width>
+            <height>120</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>1.5</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.005</stddev>
+          </noise>
+        </camera>
+        <plugin name="nebula280_stof_controller" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/nebula280</namespace>
+            <remapping>stof/image_raw:=stof/amplitude/image_raw</remapping>
+            <remapping>stof/depth/image_raw:=stof/depth/image_raw</remapping>
+            <remapping>stof/camera_info:=stof/amplitude/camera_info</remapping>
+            <remapping>stof/depth/camera_info:=stof/depth/camera_info</remapping>
+            <remapping>stof/points:=stof/points</remapping>
+          </ros>
+          <camera_name>stof</camera_name>
+          <frame_name>nebula280_optical_frame</frame_name>
+          <min_depth>0.10</min_depth>
+          <max_depth>1.20</max_depth>
+        </plugin>
+      </sensor>
+
+      <!-- ========== mToF：中远距 SLAM（至约 8 m，248×180，VFOV≈75°） ========== -->
+      <sensor name="nebula280_mtof" type="depth">
+        <always_on>true</always_on>
+        <visualize>false</visualize>
+        <update_rate>10</update_rate>
+        <camera name="mtof">
+          <horizontal_fov>1.74533</horizontal_fov>
+          <image>
+            <width>248</width>
+            <height>180</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>10.0</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </camera>
+        <plugin name="nebula280_mtof_controller" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/nebula280</namespace>
+            <remapping>mtof/image_raw:=mtof/amplitude/image_raw</remapping>
+            <remapping>mtof/depth/image_raw:=mtof/depth/image_raw</remapping>
+            <remapping>mtof/camera_info:=mtof/amplitude/camera_info</remapping>
+            <remapping>mtof/depth/camera_info:=mtof/depth/camera_info</remapping>
+            <remapping>mtof/points:=mtof/points</remapping>
+          </ros>
+          <camera_name>mtof</camera_name>
+          <frame_name>nebula280_optical_frame</frame_name>
+          <min_depth>0.10</min_depth>
+          <max_depth>8.0</max_depth>
+        </plugin>
+      </sensor>
+    </gazebo>
+  </xacro:macro>
+
+</robot>

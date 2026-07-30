@@ -1,0 +1,37 @@
+# 行人固定轨迹（世界坐标系，单位 m）
+# 修改后执行：
+#   python3 scripts/generate_house_human_world.py
+# 再重新 launch（world_name:=house_human）
+#
+# 如何在 Gazebo 里量坐标：
+#   1) ros2 launch ... world_name:=house
+#   2) 俯视（右键拖动调整视角，滚轮缩放）
+#   3) 左侧 Insert -> Simple Shapes -> Box，点到地面放下
+#   4) 选中盒子，右侧面板看 Pose 的 X / Y（Z 可忽略）
+#   5) 把想走的点按顺序记下来，填到下面 waypoints
+#   6) 删掉临时盒子即可
+#
+# 坐标系：与 TurtleBot3 House 一致，机器人默认出生约 (-2.0, -0.5)
+
+adult:
+  scale: 1.0          # 体型相对 walk.dae
+  speed: 0.45         # m/s，用于按边长自动算时间
+  delay_start: 0.0
+  # 按行走顺序；会自动闭合成环，并在拐角加短暂转向
+  waypoints:
+    - [-1.0, 4.0]
+    - [-4.0, 4.0]
+    - [-4.0, 1.0]
+    - [-1.0, 1.0]
+
+child:
+  scale: 0.65
+  # 若要与大人同路线、同相位，speed/delay 也设成一样；
+  # 仅 scale 不同即可区分体型（不要开 interpolate_x）
+  speed: 0.45
+  delay_start: 0.0
+  waypoints:
+    - [-1.5, 3.5]
+    - [-3.5, 3.5]
+    - [-3.5, 1.5]
+    - [-1.5, 1.5]

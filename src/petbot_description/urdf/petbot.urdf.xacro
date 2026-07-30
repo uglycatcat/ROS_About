@@ -2,27 +2,31 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="petbot">
 
   <!-- ===================== 几何参数 ===================== -->
-  <xacro:property name="base_length" value="0.28"/>
-  <xacro:property name="base_width" value="0.20"/>
-  <xacro:property name="base_height" value="0.08"/>
-  <xacro:property name="base_mass" value="8.0"/>
+  <!-- 主体：前后长 20cm × 宽 15cm × 高 15cm；质量加大且重心压低防翻 -->
+  <xacro:property name="base_length" value="0.20"/>
+  <xacro:property name="base_width" value="0.15"/>
+  <xacro:property name="base_height" value="0.15"/>
+  <xacro:property name="base_mass" value="15.0"/>
 
-  <xacro:property name="wheel_radius" value="0.05"/>
-  <xacro:property name="wheel_width" value="0.04"/>
-  <xacro:property name="wheel_mass" value="0.8"/>
+  <xacro:property name="wheel_radius" value="0.04"/>
+  <xacro:property name="wheel_width" value="0.03"/>
+  <xacro:property name="wheel_mass" value="0.5"/>
+  <!-- 支撑三角形尽量铺开 -->
   <xacro:property name="wheel_separation" value="0.22"/>
-  <!-- 驱动轮略靠后，提高稳定性 -->
-  <xacro:property name="wheel_x_offset" value="-0.02"/>
+  <xacro:property name="wheel_x_offset" value="-0.08"/>
   <xacro:property name="base_z" value="${wheel_radius}"/>
+  <!-- 视觉厢体上移；惯性中心贴近轮轴高度，降低翻车力矩 -->
+  <xacro:property name="base_z_offset" value="${base_height/2 - 0.02}"/>
+  <xacro:property name="base_com_z" value="0.015"/>
 
-  <xacro:property name="caster_radius" value="0.025"/>
-  <xacro:property name="caster_mass" value="0.15"/>
-  <xacro:property name="caster_x" value="0.10"/>
+  <xacro:property name="caster_radius" value="0.02"/>
+  <xacro:property name="caster_mass" value="0.12"/>
+  <xacro:property name="caster_x" value="${base_length/2 - 0.005}"/>
 
-  <xacro:property name="lidar_radius" value="0.035"/>
-  <xacro:property name="lidar_height" value="0.04"/>
-  <xacro:property name="lidar_mass" value="0.15"/>
-  <xacro:property name="lidar_z" value="${base_height / 2 + lidar_height / 2 + 0.01}"/>
+  <!-- Nebula280MIPI：头部（前面中间靠上），轻微上仰 -->
+  <xacro:property name="nebula280_x" value="${base_length/2 - 0.01}"/>
+  <xacro:property name="nebula280_z" value="${base_z_offset + base_height/2 - 0.008}"/>
+  <xacro:property name="nebula280_pitch" value="0.10"/>
 
   <xacro:macro name="box_inertia" params="m l w h">
     <inertia
@@ -48,7 +52,6 @@
   <material name="blue"><color rgba="0.15 0.40 0.80 1.0"/></material>
   <material name="black"><color rgba="0.10 0.10 0.10 1.0"/></material>
   <material name="gray"><color rgba="0.55 0.55 0.55 1.0"/></material>
-  <material name="orange"><color rgba="0.95 0.55 0.10 1.0"/></material>
 
   <link name="base_footprint"/>
 
@@ -60,23 +63,23 @@
 
   <link name="base_link">
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 ${base_z_offset}" rpy="0 0 0"/>
       <geometry>
         <box size="${base_length} ${base_width} ${base_height}"/>
       </geometry>
       <material name="blue"/>
     </visual>
     <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 ${base_z_offset}" rpy="0 0 0"/>
       <geometry>
         <box size="${base_length} ${base_width} ${base_height}"/>
       </geometry>
     </collision>
     <inertial>
-      <!-- COM 略压低，减少倾覆 -->
-      <origin xyz="0 0 -0.01" rpy="0 0 0"/>
+      <!-- 重心靠近轮轴高度，视觉仍用较高厢体 -->
+      <origin xyz="0 0 ${base_com_z}" rpy="0 0 0"/>
       <mass value="${base_mass}"/>
-      <xacro:box_inertia m="${base_mass}" l="${base_length}" w="${base_width}" h="${base_height}"/>
+      <xacro:box_inertia m="${base_mass}" l="${base_length}" w="${base_width}" h="${base_height * 0.35}"/>
     </inertial>
   </link>
 
@@ -89,7 +92,6 @@
         </geometry>
         <material name="black"/>
       </visual>
-      <!-- 球体碰撞接触更稳 -->
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
@@ -106,7 +108,6 @@
     <joint name="${prefix}_wheel_joint" type="continuous">
       <parent link="base_link"/>
       <child link="${prefix}_wheel_link"/>
-      <!-- 轮心与 base_link 同高（= wheel_radius），使轮缘触地 -->
       <origin xyz="${wheel_x_offset} ${y_reflect * wheel_separation / 2} 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
       <dynamics damping="0.2" friction="0.2"/>
@@ -143,32 +144,17 @@
     <origin xyz="${caster_x} 0 ${-base_z + caster_radius}" rpy="0 0 0"/>
   </joint>
 
-  <link name="laser_link">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
-      </geometry>
-      <material name="orange"/>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <cylinder radius="${lidar_radius}" length="${lidar_height}"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <mass value="${lidar_mass}"/>
-      <xacro:cylinder_inertia m="${lidar_mass}" r="${lidar_radius}" h="${lidar_height}"/>
-    </inertial>
-  </link>
+  <!-- 传感器：六轴 IMU + Nebula280MIPI -->
+  <xacro:include filename="$(find petbot_description)/urdf/sensors/imu_6axis.urdf.xacro"/>
+  <xacro:imu_6axis parent="base_link">
+    <!-- 靠近底盘几何中心、略高于厢体底板 -->
+    <origin xyz="0 0 ${base_z_offset - base_height/2 + 0.01}" rpy="0 0 0"/>
+  </xacro:imu_6axis>
 
-  <joint name="laser_joint" type="fixed">
-    <parent link="base_link"/>
-    <child link="laser_link"/>
-    <origin xyz="0.04 0 ${lidar_z}" rpy="0 0 0"/>
-  </joint>
+  <xacro:include filename="$(find petbot_description)/urdf/sensors/nebula280_mipi.urdf.xacro"/>
+  <xacro:nebula280_mipi parent="base_link">
+    <origin xyz="${nebula280_x} 0 ${nebula280_z}" rpy="0 ${nebula280_pitch} 0"/>
+  </xacro:nebula280_mipi>
 
   <xacro:include filename="$(find petbot_description)/urdf/petbot.gazebo.xacro"/>
 

@@ -1,0 +1,128 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 0.5
+      Plane Cell Count: 20
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Topic:
+        Value: /robot_description
+      Alpha: 1
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: true
+      Show Axes: true
+      Show Names: false
+    - Class: rviz_default_plugins/Odometry
+      Name: Odometry
+      Enabled: true
+      Topic:
+        Value: /odom
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+      Keep: 30
+      Position Tolerance: 0.05
+      Angle Tolerance: 0.1
+      Shape:
+        Value: Arrow
+        Color: 255; 25; 0
+        Alpha: 1
+        Shaft Length: 0.3
+        Shaft Radius: 0.02
+        Head Length: 0.1
+        Head Radius: 0.04
+        Axes Length: 0.3
+        Axes Radius: 0.02
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: Unique
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: false
+        Position:
+          Alpha: 0.3
+          Color: 204; 51; 204
+          Scale: 1
+          Value: false
+        Value: false
+      Value: true
+    - Class: rviz_default_plugins/PointCloud2
+      Name: NebulaMToF
+      Enabled: true
+      Topic:
+        Value: /nebula280/mtof/points
+      Style: Points
+      Size (Pixels): 2
+      Color Transformer: AxisColor
+      Axis: Z
+      Alpha: 0.8
+    - Class: rviz_default_plugins/PointCloud2
+      Name: NebulaSToF
+      Enabled: true
+      Topic:
+        Value: /nebula280/stof/points
+      Style: Points
+      Size (Pixels): 2
+      Color Transformer: FlatColor
+      Color: 0; 255; 120
+      Alpha: 0.6
+    - Class: rviz_default_plugins/Image
+      Name: NebulaColor
+      Enabled: true
+      Topic:
+        Value: /nebula280/color/image_raw
+        Reliability Policy: Best Effort
+    - Class: rviz_default_plugins/Image
+      Name: NebulaIR
+      Enabled: false
+      Topic:
+        Value: /nebula280/ir/image_raw
+        Reliability Policy: Best Effort
+    - Class: rviz_default_plugins/Image
+      Name: NebulaMToFDepth
+      Enabled: true
+      Topic:
+        Value: /nebula280/mtof/depth/image_viz
+        Reliability Policy: Best Effort
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: odom
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/ThirdPersonFollower
+      Name: ThirdPersonFollower
+      Target Frame: base_link
+      Distance: 1.8
+      Pitch: 0.55
+      Yaw: 3.14
+Window Geometry:
+  Height: 900
+  Width: 1400
+  Image1:
+    Class: Image
+    Height: 180
+    Name: NebulaColor
+  Image2:
+    Class: Image
+    Height: 180
+    Name: NebulaMToFDepth
