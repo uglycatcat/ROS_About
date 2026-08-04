@@ -23,6 +23,7 @@ from ctypes import (
     Structure,
     Union,
     byref,
+    c_char,
     c_char_p,
     c_int,
     c_long,
@@ -34,6 +35,8 @@ from ctypes import (
 import rclpy
 from geometry_msgs.msg import Twist
 from rclpy.node import Node
+from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+from std_msgs.msg import String
 
 
 HELP = """
@@ -42,10 +45,11 @@ PetBot Twist 遥控  (/cmd_vel)
   ↑ / ↓     : linear.x  = ± max_linear_x
   ← / →     : angular.z = ± max_angular_z
   空格      : 急停（清零 Twist）
+  F         : 手动遥控 ⇄ 自动跟随（仅 follow.launch 或 teleop_mode_toggle:=true）
   Ctrl+C    : 退出
 
-默认峰值：linear.x = 2.0 m/s，angular.z = 2.5 rad/s
-已启用全局抓键（Gazebo / RViz 焦点下也可用）。
+跟随请用:  ros2 launch petbot_follow follow.launch.py
+（只开 ground_seg 时按 F 不会切换，只会在终端打出字母 f）
 """
 
 XK_SPACE = 0x0020
@@ -53,6 +57,8 @@ XK_LEFT = 0xFF51
 XK_UP = 0xFF52
 XK_RIGHT = 0xFF53
 XK_DOWN = 0xFF54
+XK_F = 0x0066
+XK_F_UPPER = 0x0046
 KEY_PRESS = 2
 KEY_RELEASE = 3
 GRAB_MODE_ASYNC = 1
@@ -89,14 +95,20 @@ class _XEvent(Union):
 
 
 class TwistTeleop(Node):
-    """按键状态 → 周期性发布 Twist。"""
+    """按键状态 → 周期性发布 Twist；可选 F 键切换手动/跟随。"""
+
+    MODE_MANUAL = 'manual'
+    MODE_FOLLOW = 'follow'
 
     def __init__(self):
         super().__init__('twist_teleop')
         self.declare_parameter('cmd_vel_topic', 'cmd_vel')
-        self.declare_parameter('max_linear_x', 2.0)      # m/s 峰值
-        self.declare_parameter('max_angular_z', 2.5)     # rad/s 峰值
+        self.declare_parameter('max_linear_x', 1.2)     # m/s 峰值
+        self.declare_parameter('max_angular_z', 1.0)     # rad/s 峰值
         self.declare_parameter('publish_rate', 20.0)     # Hz
+        self.declare_parameter('enable_mode_toggle', False)
+        self.declare_parameter('mode_topic', '/control_mode')
+        self.declare_parameter('initial_mode', 'manual')
 
         topic = str(self.get_parameter('cmd_vel_topic').value)
         self._max_lin = float(self.get_parameter('max_linear_x').value)
@@ -105,12 +117,29 @@ class TwistTeleop(Node):
         if rate <= 0.0:
             rate = 20.0
 
+        self._mode_toggle = bool(self.get_parameter('enable_mode_toggle').value)
+        init_mode = str(self.get_parameter('initial_mode').value).strip().lower()
+        if init_mode not in (self.MODE_MANUAL, self.MODE_FOLLOW):
+            init_mode = self.MODE_MANUAL
+        self._mode = init_mode
+        self._mode_topic = str(self.get_parameter('mode_topic').value)
+
         self._pub = self.create_publisher(Twist, topic, 10)
+        mode_qos = QoSProfile(
+            depth=1,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL,
+            reliability=ReliabilityPolicy.RELIABLE,
+        )
+        self._mode_pub = self.create_publisher(String, self._mode_topic, mode_qos)
         self._pressed: set[str] = set()
         self._lock = threading.Lock()
         self._last = Twist()
+        self._f_down = False
         period = 1.0 / rate
         self.create_timer(period, self._on_timer)
+        self._mode_boot_left = 5 if self._mode_toggle else 0
+        if self._mode_toggle:
+            self.create_timer(0.2, self._boot_publish_mode)
 
         self.get_logger().info(
             f'Twist teleop → {topic}  '
@@ -118,11 +147,50 @@ class TwistTeleop(Node):
             f'max angular.z={self._max_ang:.2f} rad/s  '
             f'@ {rate:.0f} Hz'
         )
+        if self._mode_toggle:
+            self.get_logger().info(
+                f'模式切换已启用：按 F 切换 manual/follow '
+                f'(当前={self._mode}，{self._mode_topic})')
+        else:
+            self.get_logger().warn(
+                '模式切换未启用（enable_mode_toggle=false）。'
+                '若要跟目标请用: ros2 launch petbot_follow follow.launch.py')
+
+    def _boot_publish_mode(self):
+        if self._mode_boot_left <= 0:
+            return
+        self._publish_mode()
+        self._mode_boot_left -= 1
+
+    def _publish_mode(self):
+        msg = String()
+        msg.data = self._mode
+        self._mode_pub.publish(msg)
+
+    def toggle_mode(self):
+        if not self._mode_toggle:
+            return
+        with self._lock:
+            self._mode = (
+                self.MODE_FOLLOW if self._mode == self.MODE_MANUAL else self.MODE_MANUAL)
+            self._pressed.clear()
+        self._publish_twist(0.0, 0.0)
+        self._publish_mode()
+        self.get_logger().info(f'控制模式 → {self._mode}')
 
     def set_key(self, name: str, down: bool):
+        if name == 'mode_toggle':
+            if down and not self._f_down:
+                self._f_down = True
+                self.toggle_mode()
+            elif not down:
+                self._f_down = False
+            return
         with self._lock:
             if name == 'space' and down:
                 self._pressed.clear()
+                return
+            if self._mode != self.MODE_MANUAL:
                 return
             if down:
                 self._pressed.add(name)
@@ -135,6 +203,8 @@ class TwistTeleop(Node):
         self._publish_twist(0.0, 0.0)
 
     def _desired_twist(self) -> tuple[float, float]:
+        if self._mode != self.MODE_MANUAL:
+            return 0.0, 0.0
         with self._lock:
             keys = set(self._pressed)
         lin = 0.0
@@ -147,13 +217,15 @@ class TwistTeleop(Node):
             ang += self._max_ang
         if 'right' in keys:
             ang -= self._max_ang
-        # 同时前进+后退 → 0；峰值已是单键满速，对角组合不叠加超过峰值
         lin = max(-self._max_lin, min(self._max_lin, lin))
         ang = max(-self._max_ang, min(self._max_ang, ang))
         return lin, ang
 
     def _on_timer(self):
         lin, ang = self._desired_twist()
+        # 跟随模式不抢 cmd_vel（发 0 会顶掉跟随指令），直接跳过
+        if self._mode == self.MODE_FOLLOW:
+            return
         self._publish_twist(lin, ang)
 
     def _publish_twist(self, linear_x: float, angular_z: float):
@@ -210,6 +282,13 @@ def _run_x11_grab(node: TwistTeleop) -> bool:
         'right': XK_RIGHT,
         'space': XK_SPACE,
     }
+    # 字母 F 用 XQueryKeymap 轮询（XGrabKey 对字母键常无效），不依赖窗口焦点
+    mode_keycode = 0
+    if node._mode_toggle:
+        mode_keycode = int(x11.XKeysymToKeycode(dpy, XK_F))
+        if mode_keycode == 0:
+            node.get_logger().warn('F 键 keycode 无效，模式切换不可用')
+
     keycodes = {name: x11.XKeysymToKeycode(dpy, ks) for name, ks in keysyms.items()}
     if any(code == 0 for code in keycodes.values()):
         x11.XCloseDisplay(dpy)
@@ -224,11 +303,27 @@ def _run_x11_grab(node: TwistTeleop) -> bool:
             x11.XGrabKey(dpy, code, mods, root, True, GRAB_MODE_ASYNC, GRAB_MODE_ASYNC)
             grabbed.append((code, mods))
     x11.XFlush(dpy)
-    node.get_logger().info('X11 全局抓键已启用')
+    node.get_logger().info('X11 全局抓键已启用（方向键/空格）')
+    if mode_keycode:
+        node.get_logger().info(f'模式键 F 使用键盘状态轮询 (keycode={mode_keycode})')
+
+    x11.XQueryKeymap.argtypes = [c_void_p, POINTER(c_char)]
+    x11.XQueryKeymap.restype = c_int
+    keymap = (c_char * 32)()
+    f_was_down = False
 
     event = _XEvent()
     try:
         while rclpy.ok():
+            # 轮询 F：不抢焦点也能切模式
+            if mode_keycode:
+                x11.XQueryKeymap(dpy, keymap)
+                down = bool(keymap[mode_keycode // 8][0] & (1 << (mode_keycode % 8)))
+                if down and not f_was_down:
+                    node.set_key('mode_toggle', True)
+                    node.set_key('mode_toggle', False)
+                f_was_down = down
+
             if x11.XPending(dpy) == 0:
                 rclpy.spin_once(node, timeout_sec=0.02)
                 continue
@@ -275,10 +370,15 @@ def _run_tty(node: TwistTeleop):
                 '\x1b[D': 'left',
                 '\x1b[C': 'right',
                 ' ': 'space',
+                'f': 'mode_toggle',
+                'F': 'mode_toggle',
             }
             name = mapping.get(key)
             if name == 'space':
                 node.set_key('space', True)
+            elif name == 'mode_toggle':
+                node.set_key('mode_toggle', True)
+                node.set_key('mode_toggle', False)
             elif name:
                 with node._lock:
                     node._pressed.clear()

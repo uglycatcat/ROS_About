@@ -1,0 +1,17 @@
+# 障碍点云 → 静态背景剔除（运动前景）
+# 占用 EMA + 帧间运动残差：行人反复走过的路径不会永久烙成背景
+background_subtraction:
+  ros__parameters:
+    input_topic: /obstacle_points
+    foreground_topic: /foreground_points
+    background_topic: /background_points
+    cloud_frame: base_link
+    map_frame: odom
+    voxel_size: 0.05
+    hit_alpha: 0.25
+    miss_decay: 0.80
+    static_threshold: 0.65
+    warmup_frames: 20
+    prune_score: 0.05
+    max_voxels: 80000
+    motion_distance: 0.12

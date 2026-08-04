@@ -1,0 +1,124 @@
+Panels:
+  - Class: rviz_common/Displays
+    Name: Displays
+  - Class: rviz_common/Views
+    Name: Views
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Class: rviz_default_plugins/Grid
+      Name: Grid
+      Enabled: true
+      Cell Size: 0.5
+      Plane Cell Count: 40
+    - Class: rviz_default_plugins/TF
+      Name: TF
+      Enabled: false
+      Show Axes: true
+      Show Names: false
+    - Class: rviz_default_plugins/RobotModel
+      Name: RobotModel
+      Enabled: true
+      Description Topic:
+        Value: /robot_description
+      Alpha: 1
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Ground
+      Enabled: false
+      Topic:
+        Value: /ground_points
+        Reliability Policy: Reliable
+      Size (m): 0.02
+      Style: Flat Squares
+      Color Transformer: FlatColor
+      Color: 80; 200; 80
+      Alpha: 0.5
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Obstacle
+      Enabled: false
+      Topic:
+        Value: /obstacle_points
+        Reliability Policy: Reliable
+      Size (m): 0.02
+      Style: Flat Squares
+      Color Transformer: FlatColor
+      Color: 180; 180; 180
+      Alpha: 0.4
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Background
+      Enabled: true
+      Topic:
+        Value: /background_points
+        Reliability Policy: Reliable
+      Size (m): 0.02
+      Style: Flat Squares
+      Color Transformer: FlatColor
+      Color: 120; 120; 130
+      Alpha: 0.55
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Foreground
+      Enabled: false
+      Topic:
+        Value: /foreground_points
+        Reliability Policy: Reliable
+      Size (m): 0.035
+      Style: Flat Squares
+      Color Transformer: FlatColor
+      Color: 255; 200; 40
+      Alpha: 1
+    - Class: rviz_default_plugins/PointCloud2
+      Name: Clusters
+      Enabled: true
+      Topic:
+        Value: /cluster_points
+        Reliability Policy: Reliable
+      Size (m): 0.04
+      Style: Flat Squares
+      Color Transformer: RGB8
+      Alpha: 1
+    - Class: rviz_default_plugins/MarkerArray
+      Name: ClusterMarkers
+      Enabled: true
+      Topic:
+        Value: /cluster_markers
+    - Class: rviz_default_plugins/Odometry
+      Name: Odometry
+      Enabled: true
+      Topic:
+        Value: /odom
+      Keep: 50
+      Shape:
+        Value: Arrow
+        Color: 255; 25; 0
+        Alpha: 1
+        Shaft Length: 0.03
+        Shaft Radius: 0.002
+        Head Length: 0.01
+        Head Radius: 0.004
+        Axes Length: 0.03
+        Axes Radius: 0.002
+      Covariance:
+        Value: false
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: odom
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Name: Orbit
+      Distance: 4.0
+      Pitch: 0.8
+      Yaw: 0.8
+      Focal Point:
+        X: 1.0
+        Y: 0
+        Z: 0
+Window Geometry:
+  Height: 900
+  Width: 1400

@@ -122,7 +122,11 @@ def _resolve_world_and_spawn(context, *args, **kwargs):
             emulate_tty=True,
             parameters=[
                 os.path.join(pkg, 'config', 'teleop.yaml'),
-                {'use_sim_time': use_sim_time},
+                {
+                    'use_sim_time': use_sim_time,
+                    'enable_mode_toggle': ParameterValue(
+                        LaunchConfiguration('teleop_mode_toggle'), value_type=bool),
+                },
             ],
             condition=IfCondition(LaunchConfiguration('teleop')),
         ),
@@ -178,7 +182,10 @@ def generate_launch_description():
         DeclareLaunchArgument('rviz', default_value='true'),
         DeclareLaunchArgument(
             'teleop', default_value='true',
-            description='键盘 Twist 遥控 → /cmd_vel（峰值 linear.x=2 m/s）'),
+            description='键盘 Twist 遥控 → /cmd_vel（峰值见 config/teleop.yaml）'),
+        DeclareLaunchArgument(
+            'teleop_mode_toggle', default_value='false',
+            description='是否启用 F 键切换 manual/follow（发 /control_mode）'),
         # __default__ 表示按 world_name 自动选出生点
         DeclareLaunchArgument('x', default_value='__default__'),
         DeclareLaunchArgument('y', default_value='__default__'),

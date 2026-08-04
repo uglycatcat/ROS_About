@@ -1,0 +1,15 @@
+# 前景点云 → 欧式聚类（物体假设）
+euclidean_clustering:
+  ros__parameters:
+    input_topic: /foreground_points
+    clustered_cloud_topic: /cluster_points
+    markers_topic: /cluster_markers
+    centroids_topic: /cluster_centroids
+    # 邻域半径 (m)：两点距离 < 此值可连成同一簇
+    cluster_tolerance: 0.12
+    min_cluster_size: 8
+    max_cluster_size: 5000
+    # 簇包围盒对角线上限 (m)，过大丢弃（噪点连片）
+    max_cluster_span: 2.8
+    # 最多发布的簇数（按点数降序）
+    max_clusters: 20

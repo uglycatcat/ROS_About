@@ -1,0 +1,33 @@
+# 簇质心 → 选目标 + KF + 相对追控 → /cmd_vel
+# 默认由 /control_mode 门控：manual 不发车，follow 才跟随（保持距离）
+target_follower:
+  ros__parameters:
+    centroids_topic: /cluster_centroids
+    cmd_vel_topic: /cmd_vel
+    target_marker_topic: /follow_target_marker
+    target_pose_topic: /follow_target_pose
+    mode_topic: /control_mode
+    base_frame: base_link
+    enable_control: true
+    require_follow_mode: true
+
+    fov_half_angle: 1.4
+    associate_gate: 1.2
+    min_target_range: 0.12
+    max_target_range: 6.0
+    lost_timeout: 1.5
+    search_spin: 0.55
+    min_cluster_points: 15
+
+    # 保持水平距离（不是撞上）
+    standoff_distance: 0.20
+    align_angle: 0.35
+    kp_linear: 0.7
+    kp_angular: 1.8
+    max_linear_x: 1.2
+    max_angular_z: 1.0
+    max_backup: 0.25
+    control_rate: 20.0
+
+    process_noise: 0.5
+    measurement_noise: 0.08

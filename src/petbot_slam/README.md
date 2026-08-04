@@ -33,7 +33,7 @@ ros2 launch petbot_slam mapping.launch.py world_name:=house
 ros2 launch petbot_slam mapping.launch.py world_name:=simple
 ```
 
-键盘遥控（与 description 相同，峰值 `linear.x=2 m/s`）开着时，开车即可扩展地图。RViz Fixed Frame 为 `map`，显示 `/map` 与 `/scan`。
+键盘遥控（与 description 相同，峰值见 `petbot_description/config/teleop.yaml`）开着时，开车即可扩展地图。RViz Fixed Frame 为 `map`，显示 `/map` 与 `/scan`。
 
 ## 数据流（ToF only）
 

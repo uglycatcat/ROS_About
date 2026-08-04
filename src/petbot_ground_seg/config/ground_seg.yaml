@@ -1,0 +1,23 @@
+# ToF 点云 → 地面 / 非地面分割（仅 mToF points，不用 RGB/IR）
+ground_segmentation:
+  ros__parameters:
+    cloud_topic: /nebula280/mtof/points
+    ground_topic: /ground_points
+    obstacle_topic: /obstacle_points
+    target_frame: base_link
+    # 预处理：距离与高度粗筛（base_link，地面约在 z=-0.04）
+    range_min: 0.12
+    range_max: 6.0
+    z_min: -0.35
+    z_max: 1.20
+    # RANSAC 平面
+    distance_threshold: 0.025
+    ransac_iterations: 120
+    min_inliers: 80
+    # 法向须接近 +Z（向上），点积下限
+    normal_z_min: 0.85
+    # 先验：优先在接近地面高度的点上采样（加速收敛）
+    seed_z_min: -0.12
+    seed_z_max: 0.05
+    # 下采样：每隔 N 个点取 1 个做 RANSAC（全分辨率仍用于最终分类）
+    ransac_stride: 3
