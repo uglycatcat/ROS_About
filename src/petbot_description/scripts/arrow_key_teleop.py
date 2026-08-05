@@ -6,7 +6,7 @@
   Twist.angular.z > 0 左转（逆时针），< 0 右转  [rad/s]
   其余分量保持 0
 
-按住方向键输出峰值速度，松开为 0；空格急停。
+按住方向键输出峰值速度，松开为 0。
 优先 X11 全局抓键；无 DISPLAY 时回退终端读键。
 """
 
@@ -44,7 +44,6 @@ PetBot Twist 遥控  (/cmd_vel)
 --------------------------------
   ↑ / ↓     : linear.x  = ± max_linear_x
   ← / →     : angular.z = ± max_angular_z
-  空格      : 急停（清零 Twist）
   F         : 手动遥控 ⇄ 自动跟随（仅 follow.launch 或 teleop_mode_toggle:=true）
   Ctrl+C    : 退出
 
@@ -52,7 +51,6 @@ PetBot Twist 遥控  (/cmd_vel)
 （只开 ground_seg 时按 F 不会切换，只会在终端打出字母 f）
 """
 
-XK_SPACE = 0x0020
 XK_LEFT = 0xFF51
 XK_UP = 0xFF52
 XK_RIGHT = 0xFF53
@@ -187,9 +185,6 @@ class TwistTeleop(Node):
                 self._f_down = False
             return
         with self._lock:
-            if name == 'space' and down:
-                self._pressed.clear()
-                return
             if self._mode != self.MODE_MANUAL:
                 return
             if down:
@@ -280,7 +275,6 @@ def _run_x11_grab(node: TwistTeleop) -> bool:
         'down': XK_DOWN,
         'left': XK_LEFT,
         'right': XK_RIGHT,
-        'space': XK_SPACE,
     }
     # 字母 F 用 XQueryKeymap 轮询（XGrabKey 对字母键常无效），不依赖窗口焦点
     mode_keycode = 0
@@ -303,7 +297,7 @@ def _run_x11_grab(node: TwistTeleop) -> bool:
             x11.XGrabKey(dpy, code, mods, root, True, GRAB_MODE_ASYNC, GRAB_MODE_ASYNC)
             grabbed.append((code, mods))
     x11.XFlush(dpy)
-    node.get_logger().info('X11 全局抓键已启用（方向键/空格）')
+    node.get_logger().info('X11 全局抓键已启用（方向键）')
     if mode_keycode:
         node.get_logger().info(f'模式键 F 使用键盘状态轮询 (keycode={mode_keycode})')
 
@@ -369,14 +363,11 @@ def _run_tty(node: TwistTeleop):
                 '\x1b[B': 'down',
                 '\x1b[D': 'left',
                 '\x1b[C': 'right',
-                ' ': 'space',
                 'f': 'mode_toggle',
                 'F': 'mode_toggle',
             }
             name = mapping.get(key)
-            if name == 'space':
-                node.set_key('space', True)
-            elif name == 'mode_toggle':
+            if name == 'mode_toggle':
                 node.set_key('mode_toggle', True)
                 node.set_key('mode_toggle', False)
             elif name:

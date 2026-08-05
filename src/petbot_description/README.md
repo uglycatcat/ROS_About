@@ -65,9 +65,7 @@ ros2 launch petbot_description preview.launch.py world_name:=house_human
 |------|------------|------|
 | ↑ / ↓ | `linear.x` ± | **1.2 m/s** |
 | ← / → | `angular.z` ± | 1.0 rad/s |
-| 空格 | 急停 | |
 | F | 手动 ⇄ 跟随 | 需 `teleop_mode_toggle:=true` |
-| 空格 | 全零急停 | — |
 
 控制链路：键盘 → `twist_teleop` 发布 `geometry_msgs/Twist` 到 **`/cmd_vel`** → `gazebo_ros_diff_drive` 执行。参数见 `config/teleop.yaml`（可改 `max_linear_x` / `max_angular_z`）。
 
