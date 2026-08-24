@@ -2,6 +2,8 @@
 
 PetBot **自动跟随**：消费簇质心，KF 跟踪 + **保持距离**追控。默认手动遥控，按 **F** 切换跟随。
 
+`ament_python` 包：节点入口 `target_follower`（`setup.py` console_scripts）。
+
 ## 编译
 
 ```bash
@@ -15,7 +17,10 @@ source install/setup.bash
 
 ```bash
 ros2 launch petbot_follow follow.launch.py
+# 或单独跑节点：
+# ros2 run petbot_follow target_follower
 ```
+
 
 ### 操作
 

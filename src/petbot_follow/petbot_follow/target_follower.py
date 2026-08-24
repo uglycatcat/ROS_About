@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """自动跟随：簇质心选目标 + 常速 KF + base_link 相对追控。
 
 订阅 /cluster_centroids（odom），发布 /cmd_vel。

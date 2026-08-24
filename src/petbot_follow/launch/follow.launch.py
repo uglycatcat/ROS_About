@@ -40,7 +40,7 @@ def generate_launch_description():
 
     follower = Node(
         package='petbot_follow',
-        executable='target_follower.py',
+        executable='target_follower',
         name='target_follower',
         output='screen',
         parameters=[
