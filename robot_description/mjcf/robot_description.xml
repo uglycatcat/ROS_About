@@ -1,0 +1,120 @@
+<mujoco model="petbot">
+  <!-- 网格仍在 CAD 世界系（毫米→米）。geom quat 把 CAD(X左,Y上,Z前) 转到 MuJoCo(X前,Y左,Z上)，
+       body 轴与世界对齐。base_link 为浮动基，原点在下身包围盒中心、离地高度使轮子贴地。
+       lower_body 与 base_link 固连，作为结构树根。
+       9 铰链：前轮被动，其余七个主动（头、双耳、左右车架、左右后轮）扭矩 motor。
+       自碰关闭（conaffinity=0）；与地面/场景仍碰撞。
+       耳轴相对轮轴（Y）在正视平面内各偏 17°：左耳逆时针、右耳顺时针。
+       头轴在 XZ 内由 Z 转向 +X 27°。前轮轴在 YZ 内各偏 5°（已按检查结果反向）。 -->
+  <compiler angle="radian" meshdir="../meshes" autolimits="true"/>
+
+  <option timestep="0.002"/>
+
+  <default>
+    <geom condim="3"/>
+    <joint type="hinge" limited="true" damping="0.05" armature="0.0005"/>
+    <motor gear="1" ctrlrange="-1 1"/>
+    <default class="robot">
+      <geom type="mesh" quat="0.5 0.5 0.5 0.5" contype="1" conaffinity="0"/>
+    </default>
+    <default class="wheel">
+      <joint limited="false" damping="0.002" stiffness="0"/>
+    </default>
+  </default>
+
+  <asset>
+    <material name="mat_lower_body" rgba="0.40 0.58 0.78 0.85"/>
+    <material name="mat_head" rgba="0.95 0.90 0.78 0.85"/>
+    <material name="mat_ear" rgba="0.95 0.52 0.22 0.85"/>
+    <material name="mat_frame" rgba="0.40 0.62 0.38 0.85"/>
+    <material name="mat_front_wheel" rgba="0.92 0.72 0.12 0.85"/>
+    <material name="mat_rear_wheel" rgba="0.62 0.35 0.82 0.85"/>
+
+    <mesh name="lower_body" file="下身.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="head" file="头.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="left_ear" file="左耳.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="right_ear" file="右耳.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="left_frame" file="左车架.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="right_frame" file="右车架.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="left_front_wheel" file="左前轮.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="right_front_wheel" file="右前轮.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="left_rear_wheel" file="左后轮.STL" scale="0.001 0.001 0.001"/>
+    <mesh name="right_rear_wheel" file="右后轮.STL" scale="0.001 0.001 0.001"/>
+  </asset>
+
+  <worldbody>
+    <body name="base_link" pos="0 0 0.08481" childclass="robot">
+      <freejoint name="root"/>
+      <inertial pos="0 0 0" mass="0.01" diaginertia="0.0001 0.0001 0.0001"/>
+
+      <body name="lower_body">
+        <inertial pos="0 0 0" mass="0.5" diaginertia="0.004 0.004 0.004"/>
+        <geom name="lower_body" mesh="lower_body" pos="-0.09979 -0.12300 -0.08566" material="mat_lower_body"/>
+
+        <!-- 头：轴在 XZ 平面内由世界 Z 转向 +X 27° -->
+        <body name="head" pos="0.01602 0.00000 0.01922">
+          <inertial pos="0 0 0" mass="0.15" diaginertia="0.001 0.001 0.001"/>
+          <joint name="head" axis="0.45399 0 0.89101" range="-1.047 1.047"/>
+          <geom name="head" mesh="head" pos="-0.11581 -0.12300 -0.10488" material="mat_head"/>
+
+          <!-- 耳：正视机器人，轴相对世界 Y 左逆时针 17°、右顺时针 17° -->
+          <body name="left_ear" pos="0.02900 0.04854 0.06940">
+            <inertial pos="0 0 0" mass="0.02" diaginertia="0.0001 0.0001 0.0001"/>
+            <joint name="left_ear" axis="0 0.95630 0.29237" range="-0.785 0.785"/>
+            <geom name="left_ear" mesh="left_ear" pos="-0.14481 -0.17154 -0.17428" material="mat_ear"/>
+          </body>
+          <body name="right_ear" pos="0.02982 -0.04879 0.06866">
+            <inertial pos="0 0 0" mass="0.02" diaginertia="0.0001 0.0001 0.0001"/>
+            <joint name="right_ear" axis="0 0.95630 -0.29237" range="-0.785 0.785"/>
+            <geom name="right_ear" mesh="right_ear" pos="-0.14563 -0.07421 -0.17354" material="mat_ear"/>
+          </body>
+        </body>
+
+        <!-- 车架：轴与轮子相同（世界 Y）；铰链相对估计位置沿 +X 平移 1 cm -->
+        <body name="left_frame" pos="0.01000 0.05152 -0.00807">
+          <inertial pos="0 0 0" mass="0.12" diaginertia="0.001 0.001 0.001"/>
+          <joint name="left_frame" axis="0 1 0" range="-0.35 0.35"/>
+          <geom name="left_frame" mesh="left_frame" pos="-0.10979 -0.17452 -0.07759" material="mat_frame"/>
+
+          <body name="left_front_wheel" pos="0.10021 0.01052 -0.03166">
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0002 0.0002 0.0002"/>
+            <joint name="left_front_wheel" class="wheel" axis="0 0.99619 0.08716"/>
+            <geom name="left_front_wheel" mesh="left_front_wheel" pos="-0.21000 -0.18504 -0.04593" material="mat_front_wheel"/>
+          </body>
+          <body name="left_rear_wheel" pos="-0.07979 -0.00152 -0.04538">
+            <inertial pos="0 0 0" mass="0.04" diaginertia="0.00015 0.00015 0.00015"/>
+            <joint name="left_rear_wheel" class="wheel" axis="0 1 0"/>
+            <geom name="left_rear_wheel" mesh="left_rear_wheel" pos="-0.03000 -0.17300 -0.03221" material="mat_rear_wheel"/>
+          </body>
+        </body>
+
+        <body name="right_frame" pos="0.01000 -0.05152 -0.00807">
+          <inertial pos="0 0 0" mass="0.12" diaginertia="0.001 0.001 0.001"/>
+          <joint name="right_frame" axis="0 1 0" range="-0.35 0.35"/>
+          <geom name="right_frame" mesh="right_frame" pos="-0.10979 -0.07148 -0.07759" material="mat_frame"/>
+
+          <body name="right_front_wheel" pos="0.10021 -0.01052 -0.03166">
+            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0002 0.0002 0.0002"/>
+            <joint name="right_front_wheel" class="wheel" axis="0 0.99619 -0.08716"/>
+            <geom name="right_front_wheel" mesh="right_front_wheel" pos="-0.21000 -0.06096 -0.04593" material="mat_front_wheel"/>
+          </body>
+          <body name="right_rear_wheel" pos="-0.07979 0.00152 -0.04538">
+            <inertial pos="0 0 0" mass="0.04" diaginertia="0.00015 0.00015 0.00015"/>
+            <joint name="right_rear_wheel" class="wheel" axis="0 1 0"/>
+            <geom name="right_rear_wheel" mesh="right_rear_wheel" pos="-0.03000 -0.07300 -0.03221" material="mat_rear_wheel"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <motor name="head" joint="head"/>
+    <motor name="left_ear" joint="left_ear"/>
+    <motor name="right_ear" joint="right_ear"/>
+    <motor name="left_frame" joint="left_frame"/>
+    <motor name="right_frame" joint="right_frame"/>
+    <motor name="left_rear_wheel" joint="left_rear_wheel"/>
+    <motor name="right_rear_wheel" joint="right_rear_wheel"/>
+  </actuator>
+</mujoco>
