@@ -1,24 +1,26 @@
 <mujoco model="petbot">
-  <!-- 网格仍在 CAD 世界系（毫米→米）。geom quat 把 CAD(X左,Y上,Z前) 转到 MuJoCo(X前,Y左,Z上)，
-       body 轴与世界对齐。base_link 为浮动基，原点在下身包围盒中心、离地高度使轮子贴地。
-       lower_body 与 base_link 固连，作为结构树根。
-       9 铰链：前轮被动，其余七个主动（头、双耳、左右车架、左右后轮）扭矩 motor。
-       自碰关闭（conaffinity=0）；与地面/场景仍碰撞。
-       耳轴相对轮轴（Y）在正视平面内各偏 17°：左耳逆时针、右耳顺时针。
-       头轴在 XZ 内由 Z 转向 +X 27°。前轮轴在 YZ 内各偏 5°（已按检查结果反向）。 -->
+  <!-- 网格仍在 CAD 世界系（毫米→米）。geom quat 把 CAD(X左,Y上,Z前) 转到 MuJoCo(X前,Y左,Z上)。
+       base_link 浮动基；lower_body 固连为结构树根。
+       质量：由网格体积比例缩放到整机 1.2 kg（质心位置不变）。
+       自碰开启（contype/conaffinity bit0）；轮子仅与地面碰撞（bit1），不与机体/其他轮碰撞。
+       力矩关节限位见各 joint range。后轮 velocity，其余 motor。
+       摩擦为经验值（无实测）：关节 frictionloss 为干摩擦；geom friction 为对地接触。 -->
   <compiler angle="radian" meshdir="../meshes" autolimits="true"/>
 
-  <option timestep="0.002"/>
+  <option timestep="0.002" gravity="0 0 -9.81"/>
 
   <default>
-    <geom condim="3"/>
-    <joint type="hinge" limited="true" damping="0.05" armature="0.0005"/>
-    <motor gear="1" ctrlrange="-1 1"/>
+    <geom condim="3" friction="0.6 0.01 0.001"/>
+    <joint type="hinge" limited="true" range="-3.14159 3.14159" damping="0.038" armature="9.6e-5" frictionloss="0.02"/>
+    <site size="0.004" rgba="1 0 1 0.85"/>
     <default class="robot">
-      <geom type="mesh" quat="0.5 0.5 0.5 0.5" contype="1" conaffinity="0"/>
+      <geom type="mesh" quat="0.5 0.5 0.5 0.5" contype="1" conaffinity="1"/>
     </default>
     <default class="wheel">
-      <joint limited="false" damping="0.002" stiffness="0"/>
+      <joint limited="false" damping="0.0005" armature="2.4e-5" stiffness="0" frictionloss="0.008"/>
+    </default>
+    <default class="wheel_geom">
+      <geom type="mesh" quat="0.5 0.5 0.5 0.5" contype="2" conaffinity="0" friction="1.4 0.008 0.0004"/>
     </default>
   </default>
 
@@ -45,63 +47,86 @@
   <worldbody>
     <body name="base_link" pos="0 0 0.08481" childclass="robot">
       <freejoint name="root"/>
-      <inertial pos="0 0 0" mass="0.01" diaginertia="0.0001 0.0001 0.0001"/>
+      <inertial pos="0 0 0" mass="0.00048" diaginertia="4.8e-7 4.8e-7 4.8e-7"/>
+      <site name="com_base_link" pos="0 0 0"/>
 
       <body name="lower_body">
-        <inertial pos="0 0 0" mass="0.5" diaginertia="0.004 0.004 0.004"/>
+        <inertial pos="0.00012 0 -0.00300" mass="0.18931"
+          fullinertia="1.619405e-04 1.146291e-04 1.979408e-04 1.301916e-10 1.348205e-05 -5.299183e-11"/>
         <geom name="lower_body" mesh="lower_body" pos="-0.09979 -0.12300 -0.08566" material="mat_lower_body"/>
+        <site name="com_lower_body" pos="0.00012 0 -0.00300"/>
+        <site name="imu" pos="0 0 0" size="0.006" rgba="0 0.85 0.9 0.9"/>
 
-        <!-- 头：轴在 XZ 平面内由世界 Z 转向 +X 27° -->
         <body name="head" pos="0.01602 0.00000 0.01922">
-          <inertial pos="0 0 0" mass="0.15" diaginertia="0.001 0.001 0.001"/>
-          <joint name="head" axis="0.45399 0 0.89101" range="-1.047 1.047"/>
+          <inertial pos="0.02989 0 0.04757" mass="0.42082"
+            fullinertia="5.001868e-04 5.786223e-04 4.994510e-04 2.553582e-11 1.546730e-05 -5.267146e-10"/>
+          <joint name="head" axis="0.45399 0 0.89101" range="-1.3 1.3" damping="0.048" frictionloss="0.025"/>
           <geom name="head" mesh="head" pos="-0.11581 -0.12300 -0.10488" material="mat_head"/>
+          <site name="com_head" pos="0.02989 0 0.04757"/>
 
-          <!-- 耳：正视机器人，轴相对世界 Y 左逆时针 17°、右顺时针 17° -->
           <body name="left_ear" pos="0.02900 0.04854 0.06940">
-            <inertial pos="0 0 0" mass="0.02" diaginertia="0.0001 0.0001 0.0001"/>
-            <joint name="left_ear" axis="0 0.95630 0.29237" range="-0.785 0.785"/>
+            <inertial pos="-0.03455 0.00790 0.01776" mass="0.02431"
+              fullinertia="5.967527e-06 1.875674e-05 1.475898e-05 1.511340e-06 5.357314e-06 -1.017235e-07"/>
+            <joint name="left_ear" axis="0 0.95630 0.29237" range="-1 3" damping="0.010" frictionloss="0.008"/>
             <geom name="left_ear" mesh="left_ear" pos="-0.14481 -0.17154 -0.17428" material="mat_ear"/>
+            <site name="com_left_ear" pos="-0.03455 0.00790 0.01776"/>
           </body>
           <body name="right_ear" pos="0.02982 -0.04879 0.06866">
-            <inertial pos="0 0 0" mass="0.02" diaginertia="0.0001 0.0001 0.0001"/>
-            <joint name="right_ear" axis="0 0.95630 -0.29237" range="-0.785 0.785"/>
+            <inertial pos="-0.03537 -0.00765 0.01850" mass="0.02431"
+              fullinertia="5.967426e-06 1.875795e-05 1.476049e-05 -1.510867e-06 5.357280e-06 1.015322e-07"/>
+            <joint name="right_ear" axis="0 0.95630 -0.29237" range="-1 3" damping="0.010" frictionloss="0.008"/>
             <geom name="right_ear" mesh="right_ear" pos="-0.14563 -0.07421 -0.17354" material="mat_ear"/>
+            <site name="com_right_ear" pos="-0.03537 -0.00765 0.01850"/>
           </body>
         </body>
 
-        <!-- 车架：轴与轮子相同（世界 Y）；铰链相对估计位置沿 +X 平移 1 cm -->
         <body name="left_frame" pos="0.01000 0.05152 -0.00807">
-          <inertial pos="0 0 0" mass="0.12" diaginertia="0.001 0.001 0.001"/>
-          <joint name="left_frame" axis="0 1 0" range="-0.35 0.35"/>
+          <inertial pos="0.01017 0.02857 -0.01539" mass="0.19367"
+            fullinertia="8.713419e-05 4.260979e-04 3.953571e-04 -2.001968e-05 1.609887e-05 1.728165e-06"/>
+          <joint name="left_frame" axis="0 1 0" range="-1 1.2" damping="0.072" frictionloss="0.04"/>
           <geom name="left_frame" mesh="left_frame" pos="-0.10979 -0.17452 -0.07759" material="mat_frame"/>
+          <site name="com_left_frame" pos="0.01017 0.02857 -0.01539"/>
 
           <body name="left_front_wheel" pos="0.10021 0.01052 -0.03166">
-            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0002 0.0002 0.0002"/>
-            <joint name="left_front_wheel" class="wheel" axis="0 0.99619 0.08716"/>
-            <geom name="left_front_wheel" mesh="left_front_wheel" pos="-0.21000 -0.18504 -0.04593" material="mat_front_wheel"/>
+            <inertial pos="0 0 0" mass="0.02638"
+              fullinertia="2.171806e-05 4.179199e-05 2.187174e-05 0 0 1.756238e-06"/>
+            <joint name="left_front_wheel" class="wheel" axis="0 0.99619 0.08716" frictionloss="0.004"/>
+            <geom name="left_front_wheel" class="wheel_geom" mesh="left_front_wheel"
+              pos="-0.21000 -0.18504 -0.04593" material="mat_front_wheel"/>
+            <site name="com_left_front_wheel" pos="0 0 0"/>
           </body>
           <body name="left_rear_wheel" pos="-0.07979 -0.00152 -0.04538">
-            <inertial pos="0 0 0" mass="0.04" diaginertia="0.00015 0.00015 0.00015"/>
-            <joint name="left_rear_wheel" class="wheel" axis="0 1 0"/>
-            <geom name="left_rear_wheel" mesh="left_rear_wheel" pos="-0.03000 -0.17300 -0.03221" material="mat_rear_wheel"/>
+            <inertial pos="0 0 0" mass="0.05034"
+              fullinertia="1.509888e-05 2.264717e-05 1.509888e-05 0 0 0"/>
+            <joint name="left_rear_wheel" class="wheel" axis="0 1 0" frictionloss="0.012"/>
+            <geom name="left_rear_wheel" class="wheel_geom" mesh="left_rear_wheel"
+              pos="-0.03000 -0.17300 -0.03221" material="mat_rear_wheel"/>
+            <site name="com_left_rear_wheel" pos="0 0 0"/>
           </body>
         </body>
 
         <body name="right_frame" pos="0.01000 -0.05152 -0.00807">
-          <inertial pos="0 0 0" mass="0.12" diaginertia="0.001 0.001 0.001"/>
-          <joint name="right_frame" axis="0 1 0" range="-0.35 0.35"/>
+          <inertial pos="0.01017 -0.02857 -0.01539" mass="0.19367"
+            fullinertia="8.713514e-05 4.260893e-04 3.953488e-04 2.001807e-05 1.609680e-05 -1.728522e-06"/>
+          <joint name="right_frame" axis="0 1 0" range="-1 1.2" damping="0.072" frictionloss="0.04"/>
           <geom name="right_frame" mesh="right_frame" pos="-0.10979 -0.07148 -0.07759" material="mat_frame"/>
+          <site name="com_right_frame" pos="0.01017 -0.02857 -0.01539"/>
 
           <body name="right_front_wheel" pos="0.10021 -0.01052 -0.03166">
-            <inertial pos="0 0 0" mass="0.05" diaginertia="0.0002 0.0002 0.0002"/>
-            <joint name="right_front_wheel" class="wheel" axis="0 0.99619 -0.08716"/>
-            <geom name="right_front_wheel" mesh="right_front_wheel" pos="-0.21000 -0.06096 -0.04593" material="mat_front_wheel"/>
+            <inertial pos="0 0 0" mass="0.02638"
+              fullinertia="2.171797e-05 4.179181e-05 2.187164e-05 0 0 -1.756231e-06"/>
+            <joint name="right_front_wheel" class="wheel" axis="0 0.99619 -0.08716" frictionloss="0.004"/>
+            <geom name="right_front_wheel" class="wheel_geom" mesh="right_front_wheel"
+              pos="-0.21000 -0.06096 -0.04593" material="mat_front_wheel"/>
+            <site name="com_right_front_wheel" pos="0 0 0"/>
           </body>
           <body name="right_rear_wheel" pos="-0.07979 0.00152 -0.04538">
-            <inertial pos="0 0 0" mass="0.04" diaginertia="0.00015 0.00015 0.00015"/>
-            <joint name="right_rear_wheel" class="wheel" axis="0 1 0"/>
-            <geom name="right_rear_wheel" mesh="right_rear_wheel" pos="-0.03000 -0.07300 -0.03221" material="mat_rear_wheel"/>
+            <inertial pos="0 0 0" mass="0.05034"
+              fullinertia="1.509887e-05 2.264716e-05 1.509887e-05 0 0 0"/>
+            <joint name="right_rear_wheel" class="wheel" axis="0 1 0" frictionloss="0.012"/>
+            <geom name="right_rear_wheel" class="wheel_geom" mesh="right_rear_wheel"
+              pos="-0.03000 -0.07300 -0.03221" material="mat_rear_wheel"/>
+            <site name="com_right_rear_wheel" pos="0 0 0"/>
           </body>
         </body>
       </body>
@@ -109,12 +134,18 @@
   </worldbody>
 
   <actuator>
-    <motor name="head" joint="head"/>
-    <motor name="left_ear" joint="left_ear"/>
-    <motor name="right_ear" joint="right_ear"/>
-    <motor name="left_frame" joint="left_frame"/>
-    <motor name="right_frame" joint="right_frame"/>
-    <motor name="left_rear_wheel" joint="left_rear_wheel"/>
-    <motor name="right_rear_wheel" joint="right_rear_wheel"/>
+    <!-- 力矩/速度参数随质量比例 ×0.479（整机 1.2 kg）。ctrl 力矩为 N·m，后轮 ctrl 为 rad/s -->
+    <motor name="head" joint="head" gear="1" ctrlrange="-0.72 0.72" forcerange="-0.72 0.72"/>
+    <motor name="left_ear" joint="left_ear" gear="1" ctrlrange="-0.10 0.10" forcerange="-0.10 0.10"/>
+    <motor name="right_ear" joint="right_ear" gear="1" ctrlrange="-0.10 0.10" forcerange="-0.10 0.10"/>
+    <motor name="left_frame" joint="left_frame" gear="1" ctrlrange="-1.20 1.20" forcerange="-1.20 1.20"/>
+    <motor name="right_frame" joint="right_frame" gear="1" ctrlrange="-1.20 1.20" forcerange="-1.20 1.20"/>
+    <velocity name="left_rear_wheel" joint="left_rear_wheel" kv="0.14" ctrlrange="-25 25" forcerange="-0.38 0.38"/>
+    <velocity name="right_rear_wheel" joint="right_rear_wheel" kv="0.14" ctrlrange="-25 25" forcerange="-0.38 0.38"/>
   </actuator>
+
+  <sensor>
+    <accelerometer name="imu_accel" site="imu"/>
+    <gyro name="imu_gyro" site="imu"/>
+  </sensor>
 </mujoco>
