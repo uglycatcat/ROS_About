@@ -50,7 +50,7 @@ ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
 # ─── 系统工具 ────────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake ninja-build gdb \
-    python3-pip python3-venv python3-vcstool python3-colcon-common-extensions \
+    python-is-python3 python3-pip python3-venv python3-vcstool python3-colcon-common-extensions \
     nano tmux vim htop ncdu \
     curl wget git net-tools iputils-ping dnsutils ssh \
     usbutils udev can-utils \

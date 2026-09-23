@@ -14,7 +14,8 @@ import tty
 
 class MacTerminalKeyboard:
     KEY_CODES = {'up': 126, 'down': 125, 'left': 123, 'right': 124,
-                 'c': 8, 'space': 49, 'q': 12}
+                 'c': 8, 'space': 49, 'q': 12, 'w': 13,
+                 'e': 14, 'r': 15, 'escape': 53}
 
     def __init__(self):
         import AppKit

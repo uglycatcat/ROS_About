@@ -88,6 +88,28 @@ class PhysicsTests(unittest.TestCase):
         self.assertTrue(np.all(self.data.ctrl[self.controller.actuators] <= self.controller.high))
         np.testing.assert_array_equal(self.controller.integral, 0)
 
+    def test_configuration_preserves_mjcf_contact_parameters(self):
+        model = mujoco.MjModel.from_xml_path(str(SCENE))
+        friction = model.geom_friction.copy()
+        priority = model.geom_priority.copy()
+        configure_simulation(model)
+        np.testing.assert_array_equal(model.geom_friction, friction)
+        np.testing.assert_array_equal(model.geom_priority, priority)
+
+    def test_mjcf_alone_has_front_friction_point_one(self):
+        # No configure_simulation: contacts must get 0.1 from the XML itself.
+        model = mujoco.MjModel.from_xml_path(str(SCENE))
+        data = mujoco.MjData(model)
+        mujoco.mj_forward(model, data)
+        seen = set()
+        for contact in data.contact:
+            names = {model.geom(int(g)).name for g in contact.geom}
+            front = names & {'left_front_wheel', 'right_front_wheel'}
+            if 'floor' in names and front:
+                np.testing.assert_allclose(contact.friction[:2], .1)
+                seen.update(front)
+        self.assertEqual(seen, {'left_front_wheel', 'right_front_wheel'})
+
     def test_actual_front_contacts_have_low_friction_rears_keep_grip(self):
         self.run_for(2)
         seen = set()
@@ -99,7 +121,7 @@ class PhysicsTests(unittest.TestCase):
             if wheel is None:
                 continue
             seen.add(wheel)
-            expected = .05 if 'front' in wheel else 1.5
+            expected = .1 if 'front' in wheel else 1.5
             np.testing.assert_allclose(contact.friction[:2], expected)
         self.assertEqual(seen, {'left_front_wheel', 'right_front_wheel',
                                 'left_rear_wheel', 'right_rear_wheel'})

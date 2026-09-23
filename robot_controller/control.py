@@ -6,20 +6,9 @@ import mujoco
 import numpy as np
 
 
-FRONT_WHEEL_FRICTION = 0.05
-
-
 def configure_simulation(model: mujoco.MjModel):
-    """Runtime-only tuning; keep the source MJCF and rear traction unchanged."""
+    """Tune integration only; all contact parameters come from the MJCF."""
     model.opt.integrator = mujoco.mjtIntegrator.mjINT_IMPLICITFAST
-    floor = model.geom('floor').id
-    for name in ('left_front_wheel', 'right_front_wheel'):
-        wheel = model.geom(name).id
-        model.geom_friction[wheel, 0] = FRONT_WHEEL_FRICTION
-        # Equal-priority geoms use the larger friction coefficient. Override the
-        # floor's 1.5 here, otherwise lowering only the wheel has no effect.
-        # These wheels' collision masks allow contact with the floor only.
-        model.geom_priority[wheel] = model.geom_priority[floor] + 1
 
 
 @dataclass(frozen=True)
@@ -75,6 +64,9 @@ class DriveCommand:
 
 
 class RobotController:
+    FRAME_SPEED = 0.5  # Target angle rate in rad/s, including return to zero.
+    FRAME_KEYS = (('q', 'w'), ('e', 'r'))  # (decrease, increase), left then right.
+
     # Each tuple is (joint/actuator name, Kp, Ki, Kd). Targets are radians.
     HOLD_GAINS = (
         ('head', 2.5, 1.0, 0.10),
@@ -93,14 +85,47 @@ class RobotController:
         self.kp, self.ki, self.kd = np.array([r[1:] for r in self.HOLD_GAINS]).T
         self.integral = np.zeros(len(names))
         self.targets = np.zeros(len(names))
+        self.leg_mode = False
+        frame_names = ('left_frame', 'right_frame')
+        self.frames = np.array([names.index(n) for n in frame_names])
+        self.frame_limits = np.array([model.jnt_range[model.joint(n).id]
+                                      for n in frame_names])
         self.low = model.actuator_ctrlrange[self.actuators, 0]
         self.high = model.actuator_ctrlrange[self.actuators, 1]
         self.wheels = np.array([model.actuator(n).id for n in
                                ('left_rear_wheel', 'right_rear_wheel')])
         self.wheel_limits = model.actuator_ctrlrange[self.wheels]
 
+    @property
+    def mode_label(self):
+        return '控腿模式' if self.leg_mode else '普通模式'
+
+    @property
+    def frame_targets(self):
+        return self.targets[self.frames]
+
+    def handle_pressed(self, pressed: set[str], active: bool = True):
+        # Called once per keyboard poll, never once per simulation substep.
+        if active and 'c' in pressed:
+            self.leg_mode = not self.leg_mode
+            # Keep targets and PID integral continuous across mode switches.
+
+    def _update_frame_targets(self, keys: set[str], dt: float, active: bool):
+        targets = self.frame_targets
+        change = self.FRAME_SPEED * dt
+        if self.leg_mode:
+            if active and 'space' not in keys:
+                direction = np.array([int(plus in keys) - int(minus in keys)
+                                      for minus, plus in self.FRAME_KEYS])
+                targets += direction * change
+        else:
+            targets += np.clip(-targets, -change, change)
+        self.targets[self.frames] = np.clip(targets, self.frame_limits[:, 0],
+                                           self.frame_limits[:, 1])
+
     def step(self, data: mujoco.MjData, keys: set[str], dt: float,
              active: bool = True):
+        self._update_frame_targets(keys, dt, active)
         error = self.targets - data.qpos[self.qpos]
         proposed = self.integral + error * dt
         raw = self.kp * error + self.ki * proposed - self.kd * data.qvel[self.dof]

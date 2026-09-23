@@ -4,7 +4,8 @@
        质量：由网格体积比例缩放到整机 1.2 kg（质心位置不变）。
        自碰开启（contype/conaffinity bit0）；轮子仅与地面碰撞（bit1），不与机体/其他轮碰撞。
        力矩关节限位见各 joint range。后轮 velocity，其余 motor。
-       摩擦为经验值（无实测）：关节 frictionloss 为干摩擦；geom friction 为对地接触。 -->
+       摩擦为经验值（无实测）：关节 frictionloss 为干摩擦；geom friction 为对地接触。
+       前轮滑动摩擦为 0.1，priority=1 确保不被地面较大的摩擦覆盖。 -->
   <compiler angle="radian" meshdir="../meshes" autolimits="true"/>
 
   <option timestep="0.002" gravity="0 0 -9.81"/>
@@ -92,7 +93,8 @@
               fullinertia="2.171806e-05 4.179199e-05 2.187174e-05 0 0 1.756238e-06"/>
             <joint name="left_front_wheel" class="wheel" axis="0 0.99619 0.08716" frictionloss="0.004"/>
             <geom name="left_front_wheel" class="wheel_geom" mesh="left_front_wheel"
-              pos="-0.21000 -0.18504 -0.04593" material="mat_front_wheel"/>
+              pos="-0.21000 -0.18504 -0.04593" material="mat_front_wheel"
+              friction="0.1 0.008 0.0004" priority="1"/>
             <site name="com_left_front_wheel" pos="0 0 0"/>
           </body>
           <body name="left_rear_wheel" pos="-0.07979 -0.00152 -0.04538">
@@ -117,7 +119,8 @@
               fullinertia="2.171797e-05 4.179181e-05 2.187164e-05 0 0 -1.756231e-06"/>
             <joint name="right_front_wheel" class="wheel" axis="0 0.99619 -0.08716" frictionloss="0.004"/>
             <geom name="right_front_wheel" class="wheel_geom" mesh="right_front_wheel"
-              pos="-0.21000 -0.06096 -0.04593" material="mat_front_wheel"/>
+              pos="-0.21000 -0.06096 -0.04593" material="mat_front_wheel"
+              friction="0.1 0.008 0.0004" priority="1"/>
             <site name="com_right_front_wheel" pos="0 0 0"/>
           </body>
           <body name="right_rear_wheel" pos="-0.07979 0.00152 -0.04538">
