@@ -1,7 +1,8 @@
 <mujoco model="petbot">
   <!-- 网格仍在 CAD 世界系（毫米→米）。geom quat 把 CAD(X左,Y上,Z前) 转到 MuJoCo(X前,Y左,Z上)。
        base_link 浮动基；lower_body 固连为结构树根。
-       质量：由网格体积比例缩放到整机 1.2 kg（质心位置不变）。
+       质量：头 0.43 kg、身体 0.30 kg、左右车架各 0.36 kg；整机 1.65254 kg。
+       左右车架质心较原匀质模型沿局部 -X 后移 0.028 m；惯量由 STL 和质量/质心约束估计。
        自碰开启（contype/conaffinity bit0）；轮子仅与地面碰撞（bit1），不与机体/其他轮碰撞。
        力矩关节限位见各 joint range。后轮 velocity，其余 motor。
        摩擦为经验值（无实测）：关节 frictionloss 为干摩擦；geom friction 为对地接触。
@@ -52,15 +53,15 @@
       <site name="com_base_link" pos="0 0 0"/>
 
       <body name="lower_body">
-        <inertial pos="0.00012 0 -0.00300" mass="0.18931"
-          fullinertia="1.619405e-04 1.146291e-04 1.979408e-04 1.301916e-10 1.348205e-05 -5.299183e-11"/>
+        <inertial pos="0.00012 0.00000 -0.00300" mass="0.30000"
+          fullinertia="2.566274893e-04 1.816530030e-04 3.136772490e-04 2.063149332e-10 2.136503618e-05 -8.397627701e-11"/>
         <geom name="lower_body" mesh="lower_body" pos="-0.09979 -0.12300 -0.08566" material="mat_lower_body"/>
         <site name="com_lower_body" pos="0.00012 0 -0.00300"/>
         <site name="imu" pos="0 0 0" size="0.006" rgba="0 0.85 0.9 0.9"/>
 
         <body name="head" pos="0.01602 0.00000 0.01922">
-          <inertial pos="0.02989 0 0.04757" mass="0.42082"
-            fullinertia="5.001868e-04 5.786223e-04 4.994510e-04 2.553582e-11 1.546730e-05 -5.267146e-10"/>
+          <inertial pos="0.02989 0.00000 0.04757" mass="0.43000"
+            fullinertia="5.110981512e-04 5.912446866e-04 5.103463001e-04 2.609287249e-11 1.580471223e-05 -5.382046433e-10"/>
           <joint name="head" axis="0.45399 0 0.89101" range="-1.3 1.3" damping="0.048" frictionloss="0.025"/>
           <geom name="head" mesh="head" pos="-0.11581 -0.12300 -0.10488" material="mat_head"/>
           <site name="com_head" pos="0.02989 0 0.04757"/>
@@ -82,11 +83,11 @@
         </body>
 
         <body name="left_frame" pos="0.01000 0.05152 -0.00807">
-          <inertial pos="0.01017 0.02857 -0.01539" mass="0.19367"
-            fullinertia="8.713419e-05 4.260979e-04 3.953571e-04 -2.001968e-05 1.609887e-05 1.728165e-06"/>
+          <inertial pos="-0.01783 0.02857 -0.01539" mass="0.36000"
+            fullinertia="1.624720694e-04 5.932145503e-04 5.355919901e-04 -5.964792329e-05 -4.693248378e-05 -3.969971130e-06"/>
           <joint name="left_frame" axis="0 1 0" range="-1 1.2" damping="0.072" frictionloss="0.04"/>
           <geom name="left_frame" mesh="left_frame" pos="-0.10979 -0.17452 -0.07759" material="mat_frame"/>
-          <site name="com_left_frame" pos="0.01017 0.02857 -0.01539"/>
+          <site name="com_left_frame" pos="-0.01783 0.02857 -0.01539"/>
 
           <body name="left_front_wheel" pos="0.10021 0.01052 -0.03166">
             <inertial pos="0 0 0" mass="0.02638"
@@ -108,11 +109,11 @@
         </body>
 
         <body name="right_frame" pos="0.01000 -0.05152 -0.00807">
-          <inertial pos="0.01017 -0.02857 -0.01539" mass="0.19367"
-            fullinertia="8.713514e-05 4.260893e-04 3.953488e-04 2.001807e-05 1.609680e-05 -1.728522e-06"/>
+          <inertial pos="-0.01783 -0.02857 -0.01539" mass="0.36000"
+            fullinertia="1.624746755e-04 5.931969994e-04 5.355748628e-04 5.964482501e-05 -4.693898255e-05 3.969301948e-06"/>
           <joint name="right_frame" axis="0 1 0" range="-1 1.2" damping="0.072" frictionloss="0.04"/>
           <geom name="right_frame" mesh="right_frame" pos="-0.10979 -0.07148 -0.07759" material="mat_frame"/>
-          <site name="com_right_frame" pos="0.01017 -0.02857 -0.01539"/>
+          <site name="com_right_frame" pos="-0.01783 -0.02857 -0.01539"/>
 
           <body name="right_front_wheel" pos="0.10021 -0.01052 -0.03166">
             <inertial pos="0 0 0" mass="0.02638"
@@ -137,7 +138,7 @@
   </worldbody>
 
   <actuator>
-    <!-- 力矩/速度参数随质量比例 ×0.479（整机 1.2 kg）。ctrl 力矩为 N·m，后轮 ctrl 为 rad/s -->
+    <!-- 驱动器参数沿用原 1.2 kg 版本的设置；本次质量校正未修改驱动力限幅。ctrl 力矩为 N·m，后轮 ctrl 为 rad/s -->
     <motor name="head" joint="head" gear="1" ctrlrange="-0.72 0.72" forcerange="-0.72 0.72"/>
     <motor name="left_ear" joint="left_ear" gear="1" ctrlrange="-0.10 0.10" forcerange="-0.10 0.10"/>
     <motor name="right_ear" joint="right_ear" gear="1" ctrlrange="-0.10 0.10" forcerange="-0.10 0.10"/>

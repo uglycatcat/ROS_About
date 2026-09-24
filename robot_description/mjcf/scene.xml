@@ -21,4 +21,15 @@
     <geom name="floor" size="0 0 0.05" type="plane" material="groundplane" contype="1" conaffinity="3"
       friction="1.5 0.01 0.001"/>
   </worldbody>
+
+  <!-- 非轮子几何体与地面：与前轮相同的接触摩擦。
+       pair friction 顺序为两个滑动方向、扭转、两个滚动方向。 -->
+  <contact>
+    <pair geom1="floor" geom2="lower_body" condim="3" friction="0.1 0.1 0.008 0.0004 0.0004"/>
+    <pair geom1="floor" geom2="head" condim="3" friction="0.1 0.1 0.008 0.0004 0.0004"/>
+    <pair geom1="floor" geom2="left_ear" condim="3" friction="0.1 0.1 0.008 0.0004 0.0004"/>
+    <pair geom1="floor" geom2="right_ear" condim="3" friction="0.1 0.1 0.008 0.0004 0.0004"/>
+    <pair geom1="floor" geom2="left_frame" condim="3" friction="0.1 0.1 0.008 0.0004 0.0004"/>
+    <pair geom1="floor" geom2="right_frame" condim="3" friction="0.1 0.1 0.008 0.0004 0.0004"/>
+  </contact>
 </mujoco>
