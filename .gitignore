@@ -1,4 +1,28 @@
-install/
+# ROS 2 / colcon generated files (at any workspace depth)
 build/
+install/
 log/
-ROS2_讨论总结.md
+
+# Python environments and caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_.venv/
+venv/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Training outputs and exported policies
+
+# Local machine configuration
+.env
+.env.*
+!.env.example
+!.env.*.example
+.DS_Store
+Thumbs.db
+*.swp
+*.swo

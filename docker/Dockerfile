@@ -122,7 +122,7 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 # ─── bashrc ──────────────────────────────────────────────
 RUN echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \
-    && echo 'if [ -f /workspace/ros2_ws/install/setup.bash ]; then source /workspace/ros2_ws/install/setup.bash; fi' >> /home/$USERNAME/.bashrc \
+    && echo 'if [ -f /workspace/ros2_ws/perception_demo_ws/install/setup.bash ]; then source /workspace/ros2_ws/perception_demo_ws/install/setup.bash; fi' >> /home/$USERNAME/.bashrc \
     && echo 'export MUJOCO_PATH="${MUJOCO_PATH:-$HOME/mujoco}"' >> /home/$USERNAME/.bashrc \
     && echo 'export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-42}"' >> /home/$USERNAME/.bashrc \
     && echo 'export DISPLAY="${DISPLAY:-:1}"' >> /home/$USERNAME/.bashrc
