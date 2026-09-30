@@ -1,6 +1,6 @@
 #!/bin/bash
 # ─────────────────────────────────────────────────────────
-# 构建 → 启动容器 → 初始化工作区 → 进入 /workspace/ros2_ws
+# 构建 → 启动容器 → 初始化工作区 → 进入 /workspace/petbot2_ws/perception_demo_ws
 # 前置：Docker 已配置；基础镜像可本地已有（走国内源，无需代理）
 # MuJoCo 源码请稍后在容器内自行运行: ./docker/mujoco_setup.sh
 # ─────────────────────────────────────────────────────────
@@ -9,7 +9,9 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-WS_DIR="/workspace/ros2_ws"
+# 仓库根（= colcon 工作区根）。注意与 scripts/init-workspace.sh 的 WS_DIR
+# 取值相同但含义不同：那里指 colcon 工作区，这里用于定位仓库内的脚本。
+WS_DIR="/workspace/petbot2_ws/perception_demo_ws"
 CONTAINER_NAME="petbot_ws"
 
 export USER_UID="$(id -u)"

@@ -1,6 +1,6 @@
 #!/bin/bash
 # 下载最新 MuJoCo 官方 release 到 ~/mujoco（幂等，含 bin/simulate）。
-# 容器内执行: bash /workspace/ros2_ws/docker/mujoco_setup.sh
+# 容器内执行: bash /workspace/petbot2_ws/perception_demo_ws/docker/mujoco_setup.sh
 set -e
 
 MUJOCO_PATH="${MUJOCO_PATH:-$HOME/mujoco}"

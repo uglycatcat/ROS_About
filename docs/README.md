@@ -3,18 +3,20 @@
 ## 工作空间
 
 - [目录、路径与版本管理](workspace_layout.md)
-- [Docker 环境](../docker/README.md)
-
-## 强化学习与自恢复
-
-- [RL 工作区入口](../RL_ws/README.md)
-- [当前需求基线](../RL_ws/docs/current_scope.md)
-- [RL 文档与历史报告](../RL_ws/docs/README.md)
-- [参考仓库清单](../RL_ws/reference_project/README.md)
+- [容器环境](../docker/README.md)
 
 ## 感知示例
 
-- [感知工作区入口](../perception_demo_ws/README.md)
-- [感知资料索引](../perception_demo_ws/docs/README.md)
+- [感知工作区入口](../README.md)
+- [低矮底盘目标跟踪方案](survey.md)
+- [ToF 相机调研](what_is_tof.md)
 
-ToF 调研与目标跟踪方案已移至 `perception_demo_ws/docs/`。2026-09-24 的自恢复网页报告已归档到 `RL_ws/docs/reports/`，其中被后续需求取代的建议以当前需求基线为准。
+## ROS 2 概念整理
+
+- [ROS 2 概念与工程实践讨论总结](ROS2_讨论总结.md)
+
+## 其他工作区
+
+强化学习工作区位于本仓库之外，文档入口为顶层工作空间的 `RL_ws/README.md`，需求基线与历史报告在其 `docs/` 下。
+
+本文档内路径以本仓库为起点，即宿主机 `~/petbot2_ws/perception_demo_ws`、容器内 `/workspace/petbot2_ws/perception_demo_ws`。

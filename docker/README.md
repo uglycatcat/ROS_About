@@ -2,46 +2,50 @@
 
 镜像：`ros2-mujoco-dev:latest`；日常容器：`petbot_ws`。用于本地 ROS 2 感知示例与 MuJoCo 演示。GPU 服务器上的 Isaac Lab 训练环境后续独立配置。
 
+本目录位于感知工作区仓库内（`~/petbot2_ws/perception_demo_ws/docker`），随该仓库进行版本管理。
+
 ## 启动与进入
 
 以下管理命令在宿主机的本地图形终端执行：
 
 ```bash
-cd ~/ros2_ws/docker
+cd ~/petbot2_ws/perception_demo_ws/docker
 ./container_init.sh
 ```
 
-脚本构建镜像、放行本机 X11 连接、启动容器，并初始化 `perception_demo_ws`。`full_ws_init.sh` 适用于需要交互设置代理并额外下载 MuJoCo 官方 release 的全新环境；`build.sh` 只构建镜像。
+脚本构建镜像、放行本机 X11 连接、启动容器，并初始化 ROS 工作区（`perception_demo_ws`）。`full_ws_init.sh` 适用于需要交互设置代理并额外下载 MuJoCo 官方 release 的全新环境；`build.sh` 只构建镜像。
 
 容器不依赖任何环境变量即可启动，直接执行 `docker compose up -d` 同样安全。
 
 已有容器正常运行时：
 
 ```bash
-docker exec -it -w /workspace/ros2_ws petbot_ws bash
+docker exec -it -w /workspace/petbot2_ws/perception_demo_ws petbot_ws bash
 ```
 
-当前 Compose 将宿主机家目录挂载到 `/workspace`，所以 `~/ros2_ws` 对应 `/workspace/ros2_ws`。项目操作在容器内完成。
+当前 Compose 将宿主机家目录挂载到 `/workspace`，所以 `~/petbot2_ws/perception_demo_ws` 对应 `/workspace/petbot2_ws/perception_demo_ws`。项目操作在容器内完成。
 
 ## 工作区入口
 
-MuJoCo：
+ROS 2（容器内工作区根，`colcon` 在此执行）：
 
 ```bash
-cd /workspace/ros2_ws/RL_ws/robot_controller_demo
-python3 main.py
-```
-
-ROS 2：
-
-```bash
-cd /workspace/ros2_ws/perception_demo_ws
+cd /workspace/petbot2_ws/perception_demo_ws
 source /opt/ros/humble/setup.bash
 colcon build --base-paths src --symlink-install
 source install/setup.bash
 ```
 
-镜像的 shell 初始化只加载 `perception_demo_ws/install/setup.bash`；RL 工作区由 `COLCON_IGNORE` 排除，不参与 colcon 构建。已创建的旧容器不会自动获得 Dockerfile 修改，应按上述命令显式加载正确工作区。
+MuJoCo 演示属于 RL 工作区，位于本仓库之外的顶层工作空间：
+
+```bash
+cd /workspace/petbot2_ws/RL_ws/robot_controller_demo
+python3 main.py
+```
+
+镜像的 shell 初始化只加载 `/workspace/petbot2_ws/perception_demo_ws/install/setup.bash`；RL 工作区由 `RL_ws/COLCON_IGNORE` 排除，不参与 colcon 构建。
+
+修改 Dockerfile、`docker-compose.yml` 或本目录脚本后，**已创建的容器不会自动生效**，需要重建容器才会应用；仅改文档不影响现有容器。
 
 Python MuJoCo 绑定由镜像提供。`docker/mujoco_setup.sh` 额外下载 MuJoCo 官方 release 到容器内 `~/mujoco`，并把 `$MUJOCO_PATH/bin` 加入 `PATH`（含 `simulate`）。
 
@@ -88,3 +92,14 @@ sudo apt-get install -y "linux-modules-nvidia-595-open-$(uname -r)" && sudo rebo
 | Python | mujoco、dm_control、numpy、scipy、matplotlib、opencv-python-headless、pandas、scikit-learn、jupyter、pyserial、python-can |
 
 > 修改 Dockerfile 时注意层序：apt 与 pip 层不带版本钉住，重跑会拉入最新版本，造成依赖漂移。新增依赖请追加在尾部单独成层，避免让这些层失效。
+
+## 路径与容器名
+
+容器内工作区路径由两处决定，二者取值相同但含义不同，不要合并：
+
+| 位置 | 变量 | 含义 |
+|---|---|---|
+| `container_init.sh` | `WS_DIR` | 仓库根，用于定位 `$WS_DIR/docker/scripts/init-workspace.sh` |
+| `scripts/init-workspace.sh` | `WS_DIR` | colcon 工作区根，`colcon build` 在此执行 |
+
+本次文件树重组只调整了这些路径与文档引用，**未重建、未重启现有容器**；容器名（`petbot_ws`）与镜像标签（`ros2-mujoco-dev:latest`）保持不变。运行交互式 MuJoCo 演示前应以实际启动结果为准。

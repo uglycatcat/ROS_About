@@ -3,7 +3,8 @@
 # MuJoCo release 请另行运行 docker/mujoco_setup.sh
 set -e
 
-WS_DIR="/workspace/ros2_ws/perception_demo_ws"
+# colcon 工作区根。仓库根即工作区根，因此与 container_init.sh 的 WS_DIR 取值相同。
+WS_DIR="/workspace/petbot2_ws/perception_demo_ws"
 
 mkdir -p "$WS_DIR/src"
 cd "$WS_DIR"

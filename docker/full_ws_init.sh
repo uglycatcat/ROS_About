@@ -5,14 +5,14 @@
 # 2. 拉取基础镜像
 # 3. 构建并启动容器、初始化工作区
 # 4. 容器内下载最新 MuJoCo release 到 ~/mujoco
-# 5. 进入 /workspace/ros2_ws
+# 5. 进入 /workspace/petbot2_ws/perception_demo_ws
 # ─────────────────────────────────────────────────────────
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 
-WS_DIR="/workspace/ros2_ws"
+WS_DIR="/workspace/petbot2_ws/perception_demo_ws"
 CONTAINER_NAME="petbot_ws"
 BASE_IMAGE="osrf/ros:humble-desktop"
 

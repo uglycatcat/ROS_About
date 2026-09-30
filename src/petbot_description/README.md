@@ -8,7 +8,7 @@
 ## 编译
 
 ```bash
-cd /workspace/ros2_ws/perception_demo_ws
+cd /workspace/petbot2_ws/perception_demo_ws
 source /opt/ros/humble/setup.bash
 colcon build --base-paths src --packages-select petbot_description --symlink-install
 source install/setup.bash
@@ -47,7 +47,7 @@ ros2 launch petbot_description preview.launch.py \
 路径写在 `config/human_waypoints.yaml`（世界坐标，单位米）。改完后生成世界再启动：
 
 ```bash
-cd /workspace/ros2_ws/perception_demo_ws/src/petbot_description
+cd /workspace/petbot2_ws/perception_demo_ws/src/petbot_description
 python3 scripts/generate_house_human_world.py
 # 若用 install 空间，再 colcon build --base-paths src --packages-select petbot_description
 ros2 launch petbot_description preview.launch.py world_name:=house_human

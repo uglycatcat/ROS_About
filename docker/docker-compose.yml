@@ -17,7 +17,7 @@ services:
       # 容器启动即报 not a directory；且单文件挂载钉死 inode，重登录后读不到新 cookie。
       - /run/user/${USER_UID:-1000}:/host-run:ro
 
-    working_dir: /workspace/ros2_ws
+    working_dir: /workspace/petbot2_ws/perception_demo_ws
 
     deploy:
       resources:

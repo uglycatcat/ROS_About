@@ -10,7 +10,7 @@ PetBot **地面分割 → 背景剔除 → 欧式聚类**：只用 Nebula **ToF*
 ## 编译
 
 ```bash
-cd /workspace/ros2_ws/perception_demo_ws
+cd /workspace/petbot2_ws/perception_demo_ws
 source /opt/ros/humble/setup.bash
 colcon build --base-paths src --packages-select petbot_description petbot_ground_seg --symlink-install
 source install/setup.bash
