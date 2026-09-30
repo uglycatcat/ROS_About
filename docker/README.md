@@ -65,6 +65,8 @@ Python MuJoCo 绑定由镜像提供。`docker/mujoco_setup.sh` 额外下载 MuJo
 
 `/run/user/<uid>` 是 tmpfs 目录，只要有图形会话就必然存在，因此容器启动不再依赖外部环境变量，也不会制造空目录。
 
+挂载是只读的，所以容器内 `xauth list` 会提示 `not writable, changes will be ignored`——属正常；只看 cookie 内容用 `xauth -i -f /host-run/gdm/Xauthority list`。GUI 程序（libXau）只读该文件，不受影响。
+
 ### GUI 打不开时的排查顺序
 
 ```bash
@@ -79,6 +81,20 @@ ls -l /run/user/1000/gdm/Xauthority   # 存在即正常
 dpkg -l "linux-modules-nvidia-595-open-$(uname -r)"    # 无输出即未安装
 sudo apt-get install -y "linux-modules-nvidia-595-open-$(uname -r)" && sudo reboot
 ```
+
+## 镜像源（apt / pip）
+
+apt 与 pip 都只走 HTTP/1.1，HTTP/2 快不代表 apt 快。选源按 HTTP/1.1 实测：
+
+| 源 | HTTP/1.1 实测 | 结论 |
+|---|---|---|
+| repo.huaweicloud.com | 19 MB/s（Ubuntu）/ 8.9 MB/s（ROS2）/ 9.5 MB/s（PyPI） | ✅ 当前使用 |
+| mirrors.ustc.edu.cn | 11 MB/s | 备选 |
+| mirrors.cloud.tencent.com | 9 MB/s | 备选 |
+| mirrors.tuna.tsinghua.edu.cn | 1.8 MB/s | 备选 |
+| mirrors.aliyun.com | 0.14 MB/s（HTTP/2 有 15 MB/s，但 apt 用不到） | ❌ 弃用 |
+
+构建不需要代理。若宿主机 shell 里已有 `http_proxy`，`full_ws_init.sh` 会把镜像域名放进 `NO_PROXY`，避免构建被拖慢。
 
 ## 镜像内容
 
@@ -102,4 +118,4 @@ sudo apt-get install -y "linux-modules-nvidia-595-open-$(uname -r)" && sudo rebo
 | `container_init.sh` | `WS_DIR` | 仓库根，用于定位 `$WS_DIR/docker/scripts/init-workspace.sh` |
 | `scripts/init-workspace.sh` | `WS_DIR` | colcon 工作区根，`colcon build` 在此执行 |
 
-本次文件树重组只调整了这些路径与文档引用，**未重建、未重启现有容器**；容器名（`petbot_ws`）与镜像标签（`ros2-mujoco-dev:latest`）保持不变。运行交互式 MuJoCo 演示前应以实际启动结果为准。
+容器名（`petbot_ws`）与镜像标签（`ros2-mujoco-dev:latest`）保持不变。

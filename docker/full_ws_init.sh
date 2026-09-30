@@ -20,7 +20,7 @@ export USER_UID="$(id -u)"
 export USER_GID="$(id -g)"
 export DISPLAY="${DISPLAY:-:1}"
 
-# ─── 代理端口（交互）────────────────────────────────────
+# ─── 代理（只用于容器内访问 GitHub）─────────────────────
 DEFAULT_PORT="${PROXY_PORT:-7897}"
 read -r -p "请输入本机 VPN/代理端口 [${DEFAULT_PORT}]: " INPUT_PORT
 PROXY_PORT="${INPUT_PORT:-$DEFAULT_PORT}"
@@ -29,24 +29,15 @@ if ! [[ "$PROXY_PORT" =~ ^[0-9]+$ ]] || [ "$PROXY_PORT" -lt 1 ] || [ "$PROXY_POR
     exit 1
 fi
 
-DOCKER_GW="$(ip -4 addr show docker0 2>/dev/null | awk '/inet /{print $2}' | cut -d/ -f1)"
-DOCKER_GW="${DOCKER_GW:-172.17.0.1}"
-
+# 容器是 host 网络，容器内 127.0.0.1 就是宿主机
 HOST_PROXY="http://127.0.0.1:${PROXY_PORT}"
-BUILD_PROXY="http://${DOCKER_GW}:${PROXY_PORT}"
 
-export GODEBUG=http2client=0
-export ALL_PROXY="$HOST_PROXY"
-export all_proxy="$HOST_PROXY"
-export HTTP_PROXY="$HOST_PROXY"
-export HTTPS_PROXY="$HOST_PROXY"
-export http_proxy="$HOST_PROXY"
-export https_proxy="$HOST_PROXY"
-export NO_PROXY="localhost,127.0.0.1,::1,.aliyun.com,mirrors.aliyun.com,.tuna.tsinghua.edu.cn,mirrors.tuna.tsinghua.edu.cn,pypi.tuna.tsinghua.edu.cn"
+# 构建不走代理：apt/pip 走国内镜像（见 Dockerfile）。
+# 只把镜像域名放进 NO_PROXY，避免宿主机已有的代理变量把构建拖慢。
+export NO_PROXY="localhost,127.0.0.1,::1,repo.huaweicloud.com,mirrors.huaweicloud.com"
 export no_proxy="$NO_PROXY"
 
-echo ">>> 宿主机代理: ${HOST_PROXY}"
-echo ">>> 构建期代理: ${BUILD_PROXY}  (GODEBUG=http2client=0)"
+echo ">>> 容器内下载代理: ${HOST_PROXY}（构建不走代理）"
 
 # ─── X11 ────────────────────────────────────────────────
 # cookie 由 /run/user/<uid> 目录挂载提供（见 docker-compose.yml），此处只放行同 uid 的本地连接。
@@ -61,24 +52,9 @@ if ! docker pull "$BASE_IMAGE"; then
     exit 1
 fi
 
-# ─── 2. 构建并启动（构建层走 docker0 代理）──────────────
-export HTTP_PROXY="$BUILD_PROXY"
-export HTTPS_PROXY="$BUILD_PROXY"
-export http_proxy="$BUILD_PROXY"
-export https_proxy="$BUILD_PROXY"
-export ALL_PROXY="$BUILD_PROXY"
-export all_proxy="$BUILD_PROXY"
-
+# ─── 2. 构建并启动 ──────────────────────────────────────
 echo ">>> 构建并启动容器 (UID=${USER_UID} DISPLAY=${DISPLAY})"
 DOCKER_BUILDKIT=1 docker compose up -d --build
-
-# 还原宿主机代理（host 网络下容器内 127.0.0.1 即本机代理）
-export HTTP_PROXY="$HOST_PROXY"
-export HTTPS_PROXY="$HOST_PROXY"
-export http_proxy="$HOST_PROXY"
-export https_proxy="$HOST_PROXY"
-export ALL_PROXY="$HOST_PROXY"
-export all_proxy="$HOST_PROXY"
 
 echo ">>> 初始化工作区"
 docker exec "$CONTAINER_NAME" bash "$WS_DIR/docker/scripts/init-workspace.sh"

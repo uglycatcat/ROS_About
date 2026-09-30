@@ -21,14 +21,17 @@ ENV NVIDIA_VISIBLE_DEVICES=all \
     MUJOCO_PATH=/home/ros/mujoco \
     ROS_DOMAIN_ID=42
 
-# ─── 国内源：Ubuntu 阿里云 + ROS2 清华（仅 deb，不要 deb-src）──
+# ─── 国内源：Ubuntu + ROS2 走华为云（仅 deb，不要 deb-src）──
+# apt/pip 只会 HTTP/1.1，选源要按 HTTP/1.1 实测：
+#   阿里云 0.14 MB/s（HTTP/2 有 15 MB/s，但 apt 用不到）→ 弃用
+#   华为云 19 MB/s    中科大 11 MB/s    腾讯 9 MB/s    清华 1.8 MB/s
 RUN sed -i \
-      -e 's|http://archive.ubuntu.com/ubuntu|https://mirrors.aliyun.com/ubuntu|g' \
-      -e 's|http://security.ubuntu.com/ubuntu|https://mirrors.aliyun.com/ubuntu|g' \
+      -e 's|http://archive.ubuntu.com/ubuntu|https://repo.huaweicloud.com/ubuntu|g' \
+      -e 's|http://security.ubuntu.com/ubuntu|https://repo.huaweicloud.com/ubuntu|g' \
       /etc/apt/sources.list \
     && if [ -f /etc/apt/sources.list.d/ros2.sources ]; then \
          sed -i \
-           -e 's|http://packages.ros.org/ros2/ubuntu|https://mirrors.tuna.tsinghua.edu.cn/ros2/ubuntu|g' \
+           -e 's|http://packages.ros.org/ros2/ubuntu|https://repo.huaweicloud.com/ros2/ubuntu|g' \
            -e 's/^Types: deb deb-src/Types: deb/' \
            /etc/apt/sources.list.d/ros2.sources; \
        fi \
@@ -40,9 +43,9 @@ RUN sed -i \
     && git config --system http.version HTTP/1.1 \
     && git config --system http.postBuffer 524288000
 
-# pip：清华源 + 超时重试
-ENV PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple \
-    PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn \
+# pip：华为云 PyPI 镜像（HTTP/1.1 实测 9.5 MB/s，清华 1.0 MB/s）+ 超时重试
+ENV PIP_INDEX_URL=https://repo.huaweicloud.com/repository/pypi/simple \
+    PIP_TRUSTED_HOST=repo.huaweicloud.com \
     PIP_DEFAULT_TIMEOUT=120 \
     PIP_RETRIES=10 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
