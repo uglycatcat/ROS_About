@@ -1,4 +1,4 @@
-"""Run `python main.py` in the Linux development container or on macOS."""
+"""Run `python main.py` in a Linux/X11 or macOS graphical terminal."""
 
 import argparse
 import math

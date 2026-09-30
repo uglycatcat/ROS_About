@@ -334,11 +334,13 @@
   "hashes": {
     "robot_description/mjcf/robot_description.xml": "8e87392ebfd0cb81d02becf1dea4bdd962ce4df5f14ec6c11cf3e6434dd4736b",
     "robot_description/mjcf/scene.xml": "7a11a61af60023b9a3f527aa737479d6d8823577520ed21fcf086cd072cdf712",
-    "robot_controller/control.py": "234317644ae11666857e3878f889cb153f7fa0a230bdbac519e03decfb9a7e10"
+    "robot_controller_demo/control.py": "234317644ae11666857e3878f889cb153f7fa0a230bdbac519e03decfb9a7e10"
   },
   "dimensions_mm": [
     255.00000135049095,
     219.94100384436743,
     222.6187474801653
-  ]
+  ],
+  "path_base": "repository_root",
+  "path_note": "文件路径相对当前仓库根目录；2026-09-30 同步控制器目录迁移。哈希、物理参数及 commit 保留历史值，不代表模型自动更新。"
 }

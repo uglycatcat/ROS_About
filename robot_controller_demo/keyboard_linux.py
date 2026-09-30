@@ -24,7 +24,7 @@ class X11KeyboardState:
         try:
             self.lib = C.CDLL(find_library('X11') or 'libX11.so.6')
         except OSError as error:
-            raise RuntimeError('缺少 X11 库，请在容器内安装 libx11-6。') from error
+            raise RuntimeError('当前运行环境缺少 X11 共享库（libX11.so.6）。') from error
         signatures = {
             'XInitThreads': ([], C.c_int),
             'XOpenDisplay': ([C.c_char_p], C.c_void_p),

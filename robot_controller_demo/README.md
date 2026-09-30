@@ -2,29 +2,27 @@
 
 这是现有手动控制演示，尚未接入自恢复策略。未来 RL 的 5 路位置 + 2 路速度接口见 [需求基线](../docs/current_scope.md)。
 
-支持 Linux Docker / X11 和 macOS。程序加载
+支持 Linux / X11 和 macOS。程序加载
 `../robot_description/mjcf/scene.xml`，初始隐藏 MuJoCo 左右面板。
 
-## Linux 容器运行
+## Linux / X11 运行
 
-在宿主机的本地图形终端中进入已经运行的开发容器：
+在已有演示依赖的 Linux 图形终端中，从本仓库根目录执行：
 
 ```bash
-docker exec -it -w /workspace/ros2_ws/RL_ws/robot_controller_demo petbot_ws bash
+python3 robot_controller_demo/main.py
+```
+
+也可进入演示目录后运行：
+
+```bash
+cd robot_controller_demo
 python main.py
 ```
 
-也可以在容器的 `/workspace/ros2_ws` 下执行：
+`python` 不可用时使用 `python3`。程序根据入口文件的位置加载相邻模型，不依赖旧工作区或当前终端目录。
 
-```bash
-cd RL_ws/robot_controller_demo
-python main.py
-```
-
-容器需要连接启动终端所在的同一个 X11 桌面。项目 Compose 已挂载
-`/tmp/.X11-unix`、Xauthority，并传入 `DISPLAY`、`XAUTHORITY`。
-镜像安装 `python-is-python3` 提供 `python` 命令。
-旧容器如果没有该命令，也可直接运行 `python3 main.py`。
+此项目不再使用原共享开发容器，也不附带其 Compose 配置。若在本项目专用容器内运行演示，运行路径与图形显示连接以该容器实际配置为准；不要复用旧容器名称或挂载路径。
 
 窗口出现后，点击**启动程序的终端输入区**并按一次控制键，绑定控制终端。
 之后支持方向键组合、即时松键检测和焦点丢失停车；点击 MuJoCo 窗口时可操作
@@ -42,10 +40,10 @@ xterm）；不同 X11 窗口的焦点也会独立检查。
 
 ## macOS 运行
 
-保留原有 macOS 演示入口。在“终端.app”或 iTerm2 中，先激活已配置的独立 MuJoCo Python 环境，再运行：
+保留原有 macOS 演示入口。在已具备依赖的“终端.app”或 iTerm2 中，从仓库根目录进入演示目录后运行：
 
 ```bash
-cd <项目根目录>/RL_ws/robot_controller_demo
+cd robot_controller_demo
 python main.py
 ```
 
@@ -117,12 +115,12 @@ python main.py --max-speed 0.25 --max-yaw-rate 1.0
 
 ## 检查
 
-依赖清单见 [requirements.txt](requirements.txt)，环境要求与 uv 隔离约定见 [RL 工作区 README](../README.md)。现有镜像提供 MuJoCo 和 NumPy，但其 MuJoCo 版本与依赖清单存在差异，后续应在独立 uv 环境中固定并验证版本；不要向 ROS 自带 Python 安装训练或演示依赖。
+依赖声明见 [requirements.txt](requirements.txt)。此处只给出已有程序的运行与检查入口，不规定 Python 管理方式。
 
-在容器的项目根目录运行自动测试：
+从本仓库根目录运行已有测试：
 
 ```bash
-python -m unittest discover -s RL_ws/robot_controller_demo -v
+python3 -m unittest discover -s robot_controller_demo -v
 ```
 
 测试覆盖加减速、反向刹车、模式切换、独立控腿、角度限位、平滑回零、

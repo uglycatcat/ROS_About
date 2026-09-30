@@ -18,20 +18,20 @@
 <a href="#decision"><span>01</span>建议与边界</a><a href="#model"><span>02</span>当前模型</a><a href="#feasibility"><span>03</span>物理可行性</a><a href="#research"><span>04</span>研究证据</a><a href="#platform"><span>05</span>平台选择</a><a href="#algorithm"><span>06</span>策略与控制</a><a href="#training"><span>07</span>训练与平顺性</a><a href="#transfer"><span>08</span>泛化与实机迁移</a><a href="#deployment"><span>09</span>运行与接管</a><a href="#evaluation"><span>10</span>验收与对照</a><a href="#roadmap"><span>11</span>实施路线</a><a href="#references"><span>12</span>论文与资料</a>
 </nav><div class="side-note">模型版本 · 42fcbfd<br>研究日期 · 2026.09.24<br>本轮：研究报告与模型分析<br>未训练策略，未修改控制代码</div></aside>
 <main>
-<section role="note" style="margin:0 0 24px;padding:18px 22px;border:2px solid #c08c32;border-radius:12px;background:#fff5df;color:#38280e;font-size:15px;line-height:1.8"><strong>历史报告 · 2026-09-24</strong><br>当前方案已更新为 GPU 服务器上 Isaac Lab + RSL-RL + PPO 训练、5 路位置目标 + 2 路轮速目标、仿真内部闭环及 MuJoCo 验证。旧报告中的本地算力约束、直接力矩策略和本阶段实机辨识等建议已被取代。<a href="../../current_scope.md" style="color:#80520b;text-decoration:underline">查看当前需求基线</a>。</section>
+<section role="note" style="margin:0 0 24px;padding:18px 22px;border:2px solid #c08c32;border-radius:12px;background:#fff5df;color:#38280e;font-size:15px;line-height:1.8"><strong>历史报告 · 2026-09-24；迁移说明更新于 2026-09-30</strong><br>本页保留当时的模型观察与文献资料，不作为当前实施要求。现行主线为 GPU 服务器上 Isaac Lab + RSL-RL + PPO 训练、5 路位置目标 + 2 路轮速目标、仿真内部闭环及 MuJoCo 验证。项目现已独立；旧容器、Python 管理、本地算力限制及直接力矩策略建议均已撤销。<a href="../../current_scope.md" style="color:#80520b;text-decoration:underline">查看当前需求基线</a>，或阅读<a href="../../../AGENTS.md" style="color:#80520b;text-decoration:underline">项目接手说明</a>。</section>
 <div class="topbar"><span>PETBOT / TECHNICAL RESEARCH NOTE · 01</span><div class="top-actions"><a href="model_snapshot.json">模型快照</a><button type="button" id="print">打印 / 存为 PDF</button></div></div>
-<div class="intro"><div><div class="eyebrow">Reinforcement learning for recovery</div><h1>PetBot<br>自主翻倒恢复</h1><p class="lead">让机器人从侧倒、仰倒、趴倒及跌落后的复杂姿态中，利用自身的轮、车架、头部和耳朵，闭环恢复到可继续行驶的标准站姿。</p><div class="badge-row"><span class="tag">当前 MJCF 已核对</span><span class="tag">允许全身接触</span><span class="tag">实机力矩控制</span></div></div><figure><img class="hero-img" src="assets/upright.webp" alt="依据当前 STL 和 MJCF 渲染的 PetBot 默认站立姿态" width="1000" height="600"><figcaption>当前模型的真实网格渲染；颜色用于区分部件。图像并非训练结果。</figcaption></figure></div>
-<div class="facts"><div class="fact"><b>1.65254 <small>kg</small></b><span>当前总质量</span></div><div class="fact"><b>7 <small>路</small></b><span>主动执行器 / 9 个转动关节</span></div><div class="fact"><b>255 × 220 × 223</b><span>默认姿态外包络，约 mm</span></div><div class="fact"><b>2080 Ti · 11 GB</b><span>当前可用 GPU，容器内实测</span></div></div>
+<div class="intro"><div><div class="eyebrow">Reinforcement learning for recovery</div><h1>PetBot<br>自主翻倒恢复</h1><p class="lead">让机器人从侧倒、仰倒、趴倒及跌落后的复杂姿态中，利用自身的轮、车架、头部和耳朵，闭环恢复到可继续行驶的标准站姿。</p><div class="badge-row"><span class="tag">当前 MJCF 已核对</span><span class="tag">允许全身接触</span><span class="tag">历史模型与文献档案</span></div></div><figure><img class="hero-img" src="assets/upright.webp" alt="依据当前 STL 和 MJCF 渲染的 PetBot 默认站立姿态" width="1000" height="600"><figcaption>当前模型的真实网格渲染；颜色用于区分部件。图像并非训练结果。</figcaption></figure></div>
+<div class="facts"><div class="fact"><b>1.65254 <small>kg</small></b><span>当前总质量</span></div><div class="fact"><b>7 <small>路</small></b><span>主动执行器 / 9 个转动关节</span></div><div class="fact"><b>255 × 220 × 223</b><span>默认姿态外包络，约 mm</span></div><div class="fact"><b>GPU 服务器</b><span>现行训练位置，独立于本地演示</span></div></div>
 
 <section id="decision"><header><span class="section-no">01 / DECISION</span><h2>建议：先确认能翻，再学习怎么翻得好</h2></header>
-<div class="callout"><span class="label">推荐主线 · 针对当前构型的工程判断</span><p><strong>原生 MuJoCo 可行性验证 → PPO 基础策略 → mjlab / MuJoCo Warp 批量训练 → 平顺性课程与域随机化 → 原生 MuJoCo 复验 → 实机力矩闭环。</strong></p><p>首版采用一个覆盖多种倒地姿态的反馈策略，加一个负责接管与退出的有限状态机。优先训练统一的七维力矩策略；用保留当前“五关节位置目标＋两后轮速度目标”的策略作为对照。暂不引入视觉、大模型或复杂多专家系统。</p></div>
+<div class="callout"><span class="label">现行路线提示 · 旧推荐已撤销</span><p><strong>Isaac Lab + RSL-RL + PPO → 五关节位置与两后轮速度目标 → 仿真内部伺服 → MuJoCo 同策略验证。</strong></p><p>先跑通完整翻倒恢复，再优化平滑性和泛化；接管与退出阈值待定。本阶段不要求实机辨识或 sim2real，详细要求以<a href="../../current_scope.md">当前需求基线</a>为准。下文未更新的算法参数与实机章节仅作历史研究记录。</p></div>
 <div class="cols"><div class="box"><h3>已有研究证明了什么</h3><p>强化学习自恢复是已有实机成果的研究方向：四足、轮足、无臂双足轮式和人形平台均有相关工作。它适合处理多接触、动作顺序不固定、需要先降低再抬高重心的过程。<a class="cite" href="#r1">[R1]</a><a class="cite" href="#r3">[R3]</a><a class="cite" href="#r4">[R4]</a></p></div><div class="box"><h3>这些成果没有证明什么</h3><p>尚不能据此保证 PetBot 从所有姿态必然起身。它只有两个单轴车架、两个驱动轮和较小的耳朵力矩，构型与论文平台不同；需要先验证真实限位、力矩与接触下的可恢复范围。</p></div></div>
-<h3>本报告采用的需求定义</h3><ul><li><strong>用户已确认：</strong>任何当前模型允许的姿态和全身触地方式都可使用；头部、耳朵允许承重。实机可读取关节角度、速度、力矩，并能控制力矩。</li><li><strong>恢复目标：</strong>躯干重新直立、四轮稳定着地、五个有界关节接近默认零位、线速度和角速度收敛，然后可重新驾驶。轮子转过多少圈不影响站姿。</li><li><strong>默认不约束：</strong>世界坐标中的原位置与偏航朝向。若要求回到原来的坐标和朝向，还需定位与偏航参考，属于额外目标。</li><li><strong>场景边界：</strong>先覆盖平地上的推倒、滚翻和有限高度跌落；全姿态覆盖不等于任意冲击能量、任意地形、任意损坏状态都能恢复。首版在落地后完成自恢复，空中主动姿态控制作为后续扩展。</li></ul>
+<h3>报告撰写时的需求记录（以当前需求基线为准）</h3><ul><li><strong>用户已确认：</strong>任何当前模型允许的姿态和全身触地方式都可使用；头部、耳朵允许承重。实机可读取关节角度、速度与力矩；后续已明确本项目策略应输出位置和轮速目标，早期直接力矩接口假设不再采用。</li><li><strong>恢复目标：</strong>躯干重新直立、四轮稳定着地、五个有界关节接近默认零位、线速度和角速度收敛，然后可重新驾驶。轮子转过多少圈不影响站姿。</li><li><strong>默认不约束：</strong>世界坐标中的原位置与偏航朝向。若要求回到原来的坐标和朝向，还需定位与偏航参考，属于额外目标。</li><li><strong>场景边界：</strong>先覆盖平地上的推倒、滚翻和有限高度跌落；全姿态覆盖不等于任意冲击能量、任意地形、任意损坏状态都能恢复。首版在落地后完成自恢复，空中主动姿态控制作为后续扩展。</li></ul>
 <p class="small">下文使用三种证据标签：<span class="tag">模型事实</span>来自当前文件或容器测量；<span class="tag">文献结果</span>只对论文实验条件成立；<span class="tag proposed">建议参数</span>用于后续试验，不代表已训练或实测达标。</p>
 </section>
 
 <section id="model"><header><span class="section-no">02 / MODEL AUDIT</span><h2>这个机器人有什么可用的恢复能力</h2></header>
-<p>以 <code>42fcbfdf889164eb7cd9773eeffaf3aca919ec27</code> 为依据，容器中的 <code>robot_description/mjcf/scene.xml</code> 包含模型和地面接触配置。坐标约定为 X 前、Y 左、Z 上；STL 由毫米缩放为米。</p>
+<p>以 <code>42fcbfdf889164eb7cd9773eeffaf3aca919ec27</code> 为依据，仓库中的 <code>robot_description/mjcf/scene.xml</code> 包含模型和地面接触配置。坐标约定为 X 前、Y 左、Z 上；STL 由毫米缩放为米。</p>
 <div class="table-wrap"><table><thead><tr><th>部件 / 自由度</th><th>当前质量</th><th>当前能力</th><th>对自恢复的意义</th></tr></thead><tbody>
 <tr><td>头部 × 1</td><td>0.430 kg</td><td>±1.3 rad；±0.72 N·m；转轴向前倾约 27°</td><td>头部约占整机质量 26%；可改变接触与质量分布，但不能把它当作独立的俯仰＋偏航两自由度机构。</td></tr>
 <tr><td>左右耳 × 2</td><td>各 0.02431 kg</td><td>−1.0～3.0 rad；各 ±0.10 N·m</td><td>允许撑地、改变支点、打破对称或辅助摆动。能否承担主要抬升作用仍受小力矩和力臂约束。</td></tr>
@@ -71,33 +71,22 @@
 <p class="small">推荐阅读顺序：轮腿协调 [R3] → 经典恢复 [R1] → HumanUP [R5] → 执行器与迁移 [R2] → 有探索瓶颈时再读 FTSR [R4]。这些工作的启发是训练方法与问题分解，而非复用不同构型的动作或策略权重。</p>
 </section>
 
-<section id="platform"><header><span class="section-no">05 / PLATFORM</span><h2>保留 MuJoCo，按需要增加并行训练能力</h2></header>
-<p><span class="tag">容器实测</span><code>petbot_ws:/workspace/ros2_ws</code>：Python 3.10.12、MuJoCo 3.11.0、16 个可见逻辑处理器、约 62 GiB RAM、RTX 2080 Ti / 11264 MiB，驱动 595.84。本轮检查时尚未安装 PyTorch、JAX 或 MuJoCo Warp。</p>
-<div class="table-wrap"><table><thead><tr><th>平台组合</th><th>适合本项目的用途</th><th>代价与限制</th><th>建议</th></tr></thead><tbody>
-<tr><td>原生 MuJoCo + Gymnasium 接口 + SB3 PPO</td><td>逐接触调试、小批量基线、可达性探索、作为训练后复验环境</td><td>CPU 多进程不等于 GPU 物理加速；SB3 标准 PPO 不是开箱即用的非对称 critic 实现。小 MLP 的 PPO 可先使用 CPU。<a class="cite" href="#r14">[R14]</a></td><td>第一阶段必做</td></tr>
-<tr><td>mjlab + MuJoCo Warp + RSL-RL</td><td>GPU 并行物理、PyTorch PPO、分离 actor / critic 观测、域随机化</td><td>先核对 mesh、显式接触 pair、摩擦、积分器与执行器支持；需要测显存和接触缓冲容量。<a class="cite" href="#r11">[R11]</a><a class="cite" href="#r12">[R12]</a><a class="cite" href="#r13">[R13]</a></td><td><strong>批量训练首选</strong></td></tr>
-<tr><td>MuJoCo Playground + MJX / Warp</td><td>使用 JAX 训练和批量随机化；保留 MuJoCo 家族物理</td><td>编译、批处理与 JAX 调试需要适应；不同后端功能并非完全一致。当前 Playground 已采用 Warp 路线，不能简单视为“只支持旧 MJX”。<a class="cite" href="#r15">[R15]</a><a class="cite" href="#r21">[R21]</a></td><td>熟悉 JAX 时的备选</td></tr>
-<tr><td>Isaac Lab + Isaac Sim / PhysX</td><td>已有 NVIDIA 资产、视觉和机器人任务生态时有优势</td><td>资产/接触迁移成本更高；当前官方 Isaac Sim 完整栈的最低表列为 RTX 4080、16 GB VRAM，2080 Ti 低于该表要求。<a class="cite" href="#r16">[R16]</a></td><td>不作为当前第一选择</td></tr>
-<tr><td>Isaac Lab + 独立 Newton / MuJoCo-Warp 后端</td><td>需要 Isaac Lab 风格管理接口，同时希望避开完整 Isaac Sim</td><td>官方已有可不依赖 Isaac Sim 的 Newton 路线；应锁定具体版本验证，不能把上行硬件门槛套用到所有 Isaac Lab 后端。<a class="cite" href="#r17">[R17]</a></td><td>生态需求明确时再评估</td></tr>
-</tbody></table></div>
-<div class="callout"><p><strong>现有硬件足够开始研究，不先承诺训练用时。</strong>Warp 当前兼容表包含 Turing / sm_75，2080 Ti 属于此代；这说明它有可评估的加速路径，不等于本模型所有配置已完成兼容与性能验证。<a class="cite" href="#r20">[R20]</a></p><p>检索到的 mjlab 主分支依赖声明与 Python 3.10、MuJoCo 3.11 系列相容，但主分支会变动。后续应在专用训练容器中固定 Python、PyTorch、Warp、MuJoCo、mjlab 和 RSL-RL 版本，保留当前开发容器作为原生验证基准。<a class="cite" href="#r11">[R11]</a></p></div>
-<h3>训练规模的决定方法</h3><p>先做 16～32 个 CPU 环境的正确性基线，再在 GPU 上对 64 / 128 / 256 / 512 个无渲染环境逐级测量。记录环境步吞吐、物理步吞吐、显存、接触数峰值、缓冲溢出、NaN 和训练墙钟时间。选择实际最有效的规模，不照抄论文的 4096 环境。</p><p>视觉 STL 可以保留；训练碰撞几何宜使用保留关键外形与接触面的简化凸分解。质量、质心和惯量继续显式指定，避免简化网格时被自动重算。最终必须在更完整的碰撞模型中复验。</p>
-</section>
+<section id="platform"><header><span class="section-no">05 / PLATFORM</span><h2>平台路线已更新</h2></header><p>旧共享容器、Python 管理、固定版本组合与基于本地硬件的环境说明已移除。当前采用 GPU 服务器上的 Isaac Lab + RSL-RL + PPO，MuJoCo 用于 sim2sim 演示。参考项目需要实际运行时，各自创建专用容器。</p><p>本页不再提供环境配置或安装建议。项目边界见<a href="../../../README.md">仓库 README</a>，复用与验收见<a href="../../engineering_handoff.md">工程实施说明</a>。</p></section>
 
-<section id="algorithm"><header><span class="section-no">06 / POLICY DESIGN</span><h2>PPO 作为主算法，七路力矩作为最终接口</h2></header>
+<section id="algorithm"><header><span class="section-no">06 / POLICY DESIGN</span><h2>历史动作方案：七路力矩提案已撤销</h2></header><p>现行策略使用五个位置目标与两个后轮速度目标。以下旧力矩方案及候选参数仅为历史记录。</p><details><summary>展开已撤销的旧接口设计</summary>
 <div class="table-wrap"><table><thead><tr><th>方法</th><th>角色</th><th>为何这样选</th></tr></thead><tbody><tr><td>PPO + 非对称 actor–critic</td><td>主方案</td><td>适合批量采样连续控制；训练 critic 可使用额外物理信息，部署 actor 仅使用真实传感输入。已有轮腿恢复研究采用此类组织。<a class="cite" href="#r7">[R7]</a><a class="cite" href="#r3">[R3]</a></td></tr><tr><td>SAC</td><td>小规模样本效率对照</td><td>离策略经验复用有价值；课程分布变化、回放数据和高速并行更新需要额外处理。不默认认为它一定优于 PPO。<a class="cite" href="#r8">[R8]</a></td></tr><tr><td>动作模板 / 轨迹优化</td><td>可行性基线与示范来源</td><td>便于分析为什么能翻、为什么失败；适合少量姿态，不把固定回放当作最终泛化方案。</td></tr><tr><td>分层策略 / 师生 / RMA</td><td>出现明确瓶颈后扩展</td><td>多行为切换、历史适应或特权教师可能有用，但先让一个可部署观测的策略跑通，避免同时引入过多学习模块。<a class="cite" href="#r1">[R1]</a><a class="cite" href="#r10">[R10]</a></td></tr></tbody></table></div>
 <h3>动作空间：直接力矩与当前模型的差别必须显式处理</h3>
 <div class="action-order"><div>头<b>±0.72</b></div><div>左耳<b>±0.10</b></div><div>右耳<b>±0.10</b></div><div>左车架<b>±1.20</b></div><div>右车架<b>±1.20</b></div><div>左后轮<b>±0.38</b></div><div>右后轮<b>±0.38</b></div></div>
 <p class="small">上表单位均为 N·m；这些是当前模型的力矩上限，尚未用实机峰值/持续输出曲线校准。动作按关节名固定映射，不依赖数组顺序猜测。</p>
 <div class="equation">aₜ ∈ [−1, 1]⁷<br>τ<sub>cmd</sub> = rate_limit(τ<sub>max</sub> ⊙ aₜ)<br>τ<sub>applied</sub> = actuator_model(τ<sub>cmd</sub>, q̇, delay, voltage, temperature)</div>
-<p><strong>推荐最终方案：</strong>七维归一化力矩输出，前轮保持被动；动作变化率限制、必要的低通/插值、电机动态与力矩饱和同时存在于训练和部署中。直接力矩不意味着关闭稳定措施，而是把这些措施完整纳入环境。</p>
+<p><strong>当时提案（已撤销）：</strong>七维归一化力矩输出，前轮保持被动；动作变化率限制、必要的低通/插值、电机动态与力矩饱和同时存在于训练和部署中。直接力矩不意味着关闭稳定措施，而是把这些措施完整纳入环境。</p>
 <p><strong>必须解决：</strong>当前后轮是 <code>velocity</code> actuator，<code>data.ctrl</code> 的单位为 rad/s。后续若采用七维力矩策略，应在专用训练模型中把两个后轮改为匹配实机的力矩执行器，并保留原有力矩上限及合理轮速约束；不能把 N·m 数值直接写进当前轮速入口。本轮不做这项修改。</p>
 <p><strong>低风险对照：</strong>保留当前执行器结构，学习五个有界关节目标与两个后轮速度目标，底层继续产生受限力矩。两种动作空间做消融比较；若位置目标策略更稳健、且实机能复现相同闭环，也完全可以作为最终方案。不要在倒地时强制高增益 PID 把所有关节立刻拉回零位。</p>
 <h3>观测：策略只看到实机可以获得的信息</h3>
 <div class="table-wrap"><table><thead><tr><th>Actor 输入建议</th><th>维度</th><th>注意事项</th></tr></thead><tbody><tr><td>头、耳、车架的角度</td><td>5</td><td>按各自限位归一化；连续轮的绝对圈数不是必要输入。</td></tr><tr><td>全部关节速度</td><td>9</td><td>包含被动前轮；以实际编码器覆盖为准，缺少前轮测量时应在训练中同步移除。</td></tr><tr><td>执行器实测关节力矩</td><td>7</td><td>区分电机侧和关节输出侧，统一符号、减速比和滤波；不可用理想指令力矩替代实际测量而不建模。</td></tr><tr><td>机体系重力方向＋角速度＋加速度</td><td>3＋3＋3</td><td>重力方向由与实机一致的姿态估计器提供；剧烈加速时不能简单归一化加速度计，在自由落体时加速度计也不提供可靠重力方向。</td></tr><tr><td>上一步动作</td><td>7</td><td>使用一致的动作定义；建议明确是否记录限幅后的命令。</td></tr><tr><td><strong>合计 / 历史</strong></td><td><strong>37 / 帧</strong></td><td>可先用 10 帧历史、约 0.2 s；再对照 GRU。历史长度和传感器滤波需一并验证。</td></tr></tbody></table></div>
 <p>Critic 训练时可以额外看到基座真实速度、高度、接触状态、地面参数、随机化后的质量/质心等；这些变量不能偷偷出现在部署 actor 中。若后续选择特权教师＋学生蒸馏，学生必须独立通过同一测试集；使用非对称 critic 本身不要求蒸馏。</p>
 <details><summary>建议的首轮训练配置与频率</summary><div><p><span class="tag proposed">起点参数，不是调优结果</span>物理积分保留 0.002 s / 500 Hz；策略先用 50 Hz，每动作 10 个物理步，并与 100 Hz 对照。实机底层力矩循环应达到经测量验证的频率，不能把仿真 500 Hz 当成硬件已满足。</p><p>Actor 可从 256–256–128 的 MLP＋历史堆叠开始；critic 独立网络。PPO 起点：学习率 3×10⁻⁴、clip 0.2、γ=0.995、GAE λ=0.95、rollout 64～128、每次更新 4～8 个 epoch。使用观测归一化、梯度裁剪，并对 KL 和熵做监测。超时截断与真实终止的 bootstrap 要区别处理。</p><p>滤波、限幅和延迟必须参与训练。部署时临时再加很强的平滑器，可能让本来需要的动态翻转失败。</p></div></details>
-</section>
+</details></section>
 
 <section id="training"><header><span class="section-no">07 / TRAINING & SMOOTHNESS</span><h2>先发现支撑转换，再让动作稳定、流畅</h2></header>
 <div class="flow"><div><b>① 站稳与近倒</b><small>恢复到零位附近，处理小倾斜与轻微推力；建立成功判定。</small></div><div><b>② 典型倒地族</b><small>左右侧倒、前后倒、倒置，混合随机关节姿态；允许全身接触。</small></div><div><b>③ 连续动态状态</b><small>随机朝向、实际推倒、有限高度跌落与滚动后状态，混合采样。</small></div><div><b>④ 平顺与泛化</b><small>加强动作变化与冲击成本；加入模型不确定性、重复扰动和停稳。</small></div></div>
@@ -179,7 +168,7 @@
 <li id="r21"><span class="refno">R21</span><div><a href="https://mujoco.readthedocs.io/en/latest/mjx.html#feature-parity" target="_blank" rel="noopener noreferrer">MuJoCo MJX：Feature Parity</a><small>比较 MJX-Warp 与 MJX-JAX；选择后端前检查本模型所用功能。</small></div></li>
 </ol>
 </section>
-<footer class="endnote">研究基线：PetBot commit <code>42fcbfd</code> · 2026-09-24 · 模型与渲染分析在 <code>petbot_ws</code> 容器内完成。<br>参数、文件哈希与几何信息见 <a href="model_snapshot.json">模型快照</a>。本报告为实施方案；建议参数和目标指标均未被表述为训练成绩。</footer>
+<footer class="endnote">研究基线：PetBot commit <code>42fcbfd</code> · 2026-09-24 · 模型与渲染分析为迁移前的历史记录。<br>参数、文件哈希与几何信息见 <a href="model_snapshot.json">模型快照</a>。本报告为历史调研资料；当前实施要求见需求基线，建议参数和目标指标不是训练成绩。</footer>
 </main>
 <script>
 document.getElementById('print').addEventListener('click',()=>{document.querySelectorAll('details').forEach(d=>d.open=true);window.print()});
