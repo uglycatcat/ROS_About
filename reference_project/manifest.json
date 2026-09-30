@@ -1,7 +1,7 @@
 {
   "captured_at": "2026-09-29T10:13:21.448539+00:00",
-  "updated_at": "2026-09-30T09:44:32+00:00",
-  "purpose": "Source references only; not installed as project dependencies, except rl_sar, which is built and run locally for policy verification.",
+  "updated_at": "2026-09-30T11:08:00+00:00",
+  "purpose": "Source references only; not installed as project dependencies, except rl_sar (built and run locally for policy verification) and recovery (installed and trained locally for fall-recovery verification).",
   "clone_options": [
     "--depth",
     "1",
@@ -36,6 +36,19 @@
         {"name": "mujoco", "version": "3.2.7", "path": "library/mujoco"},
         {"name": "robot_descriptions", "version": "1.0.2", "path": "src/rl_sar_zoo"}
       ]
+    },
+    {
+      "name": "recovery",
+      "url": "https://github.com/Kitjesen/recovery.git",
+      "role": "wheel_legged_self_righting_isaaclab",
+      "branch": "main",
+      "commit": "5b57477598963695be27474c0ba941a1ba4afd38",
+      "captured_at": "2026-09-30T11:08:00+00:00",
+      "installed": true,
+      "pyproject_version": "0.1.0",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
     },
     {
       "name": "WBC-AGILE",
