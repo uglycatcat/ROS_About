@@ -1,6 +1,9 @@
 #!/bin/bash
 # 下载最新 MuJoCo 官方 release 到 ~/mujoco（幂等，含 bin/simulate）。
 # 容器内执行: bash /workspace/petbot2_ws/perception_demo_ws/docker/mujoco_setup.sh
+# 注：api.github.com 经部分代理节点会返回 403（GitHub 侧限制）。若报「无法获取最新版本号」，
+#     去掉代理重试即可——本机容器内直连 api.github.com 正常（github.com 的 release 下载则建议走代理）。
+#     已有 ~/mujoco/bin/simulate 时脚本直接退出，不联网。
 set -e
 
 MUJOCO_PATH="${MUJOCO_PATH:-$HOME/mujoco}"
