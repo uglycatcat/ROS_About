@@ -1,0 +1,82 @@
+{
+  "captured_at": "2026-09-29T10:13:21.448539+00:00",
+  "purpose": "Source references only; not installed as project dependencies.",
+  "clone_options": [
+    "--depth",
+    "1",
+    "--single-branch"
+  ],
+  "git_lfs_skip_smudge": true,
+  "repositories": [
+    {
+      "name": "robot_lab",
+      "url": "https://github.com/fan-ziqi/robot_lab.git",
+      "role": "training_framework",
+      "branch": "main",
+      "commit": "500399ed75f510aeaff28705a8ce736c514dbec3",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    },
+    {
+      "name": "WBC-AGILE",
+      "url": "https://github.com/nvidia-isaac/WBC-AGILE.git",
+      "role": "self_righting_task",
+      "branch": "main",
+      "commit": "6830cf995714e81c91ce63247e8e016d36e28f14",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    },
+    {
+      "name": "getup_gym",
+      "url": "https://github.com/2350575870/getup_gym.git",
+      "role": "wheel_legged_recovery",
+      "branch": "master",
+      "commit": "238d2962a0fee8e3da4da914cadcea2be00ce402",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    },
+    {
+      "name": "HumanUP",
+      "url": "https://github.com/RunpeiDong/HumanUP.git",
+      "role": "recovery_curriculum",
+      "branch": "master",
+      "commit": "7516e0f27e6f4d1e7365cf64ea577a78247bd8cb",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    },
+    {
+      "name": "tron2_rl_lab",
+      "url": "https://github.com/limxdynamics/tron2_rl_lab.git",
+      "role": "mixed_action_reference",
+      "branch": "main",
+      "commit": "db021b4016648a6ddc97fb0acbe5df882cd53fc5",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    },
+    {
+      "name": "b2w-rl",
+      "url": "https://github.com/LauraMQuiros/b2w-rl.git",
+      "role": "mixed_action_example",
+      "branch": "master",
+      "commit": "ad82b971bf69a84170f027035c1e2e3bf97e4ef9",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    },
+    {
+      "name": "Wheel-Legged-Lab",
+      "url": "https://github.com/zyicome/Wheel-Legged-Lab.git",
+      "role": "staged_training_reference",
+      "branch": "main",
+      "commit": "e61bfe1fb05aac638ba33e41f91b4eddf3c3c1e7",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": false
+    }
+  ]
+}

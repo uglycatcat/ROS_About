@@ -1,0 +1,44 @@
+# ─── 上游参考项目快照 ────────────────────────────────────────
+# reference_project/ 下是调研用的上游 checkout（实测约 1.8 GB，含各仓库自身 .git 约 404 MB；
+# 不含 .git 约 1.4 GB）。
+# 只保留该目录的 README.md、manifest.json 和 .gitignore 纳入版本管理；
+# 其它参考仓库不安装、不作为 submodule / 嵌套仓库提交。
+/reference_project/*/
+
+# ─── 本地环境工具与依赖 checkout ─────────────────────────────
+/.tools/
+/.uv/
+/.venv/
+/.venv-mujoco/
+/third_party/
+
+# ─── Python 缓存 ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# ─── 训练产物与本机环境记录 ──────────────────────────────────
+/artifacts/
+logs/
+runs/
+outputs/
+checkpoints/
+wandb/
+events.out.tfevents.*
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.safetensors
+
+# ─── 本机配置 ────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
