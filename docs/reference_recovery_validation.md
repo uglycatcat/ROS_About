@@ -168,5 +168,5 @@ PPO 配置：`num_steps_per_env = 48`、`max_iterations = 10000`、`num_learning
 
 ## 相关文档
 
-- [参考项目索引](../../reference_project/README.md)：其余 8 个参考项目的用途与快照版本
-- [当前需求基线](../current_scope.md)、[工程实施说明](../engineering_handoff.md)：PetBot 恢复任务的需求与设计
+- [参考项目索引](../reference_project/README.md)：其余 8 个参考项目的用途与快照版本
+- [当前需求基线](current_scope.md)、[工程实施说明](engineering_handoff.md)：PetBot 恢复任务的需求与设计
