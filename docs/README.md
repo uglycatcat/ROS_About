@@ -9,7 +9,8 @@
 3. [当前需求基线](current_scope.md)：目标、动作接口、范围与待定项。
 4. [工程实施说明](engineering_handoff.md)：训练设计、sim2sim 契约、阶段验收。
 5. [参考项目索引](../reference_project/README.md)：上游用途、源码入口和快照版本。
-6. [机器人模型](../robot_description/README.md) 与 [键盘演示](../robot_controller_demo/README.md)。
+6. [recovery 运行验证记录](reference_recovery_validation.md)：轮足倒地起身参考项目的克隆、容器内跑通与训练实测，含本机硬件限制。
+7. [机器人模型](../robot_description/README.md) 与 [键盘演示](../robot_controller_demo/README.md)。
 
 ## 历史资料
 

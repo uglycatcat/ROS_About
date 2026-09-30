@@ -1,6 +1,7 @@
 {
   "captured_at": "2026-09-29T10:13:21.448539+00:00",
-  "purpose": "Source references only; not installed as project dependencies.",
+  "updated_at": "2026-09-30T09:44:32+00:00",
+  "purpose": "Source references only; not installed as project dependencies, except rl_sar, which is built and run locally for policy verification.",
   "clone_options": [
     "--depth",
     "1",
@@ -17,6 +18,24 @@
       "shallow": true,
       "lfs_downloaded": false,
       "submodules_initialized": false
+    },
+    {
+      "name": "rl_sar",
+      "url": "https://github.com/fan-ziqi/rl_sar.git",
+      "role": "sim2sim_and_deployment",
+      "branch": "main",
+      "commit": "376d42c9b128f963ab08579762d5a216a976ce39",
+      "captured_at": "2026-09-30T09:05:00+00:00",
+      "version_file": "4.0.0",
+      "shallow": true,
+      "lfs_downloaded": false,
+      "submodules_initialized": true,
+      "extra_assets": [
+        {"name": "libtorch", "version": "2.3.0", "path": "library/inference_runtime/libtorch"},
+        {"name": "onnxruntime", "version": "1.22.0", "path": "library/inference_runtime/onnxruntime"},
+        {"name": "mujoco", "version": "3.2.7", "path": "library/mujoco"},
+        {"name": "robot_descriptions", "version": "1.0.2", "path": "src/rl_sar_zoo"}
+      ]
     },
     {
       "name": "WBC-AGILE",
