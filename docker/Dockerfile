@@ -110,6 +110,13 @@ RUN pip install --no-cache-dir \
     scikit-image imageio pyserial python-can requests websockets \
     && rm -rf ~/.cache/pip
 
+# ─── X11 会话工具（容器内 GUI 调试 / 无头渲染）───────────
+# 单独成层：改这里不会让上面沉重的 apt/pip 层失效（那两个层不带版本钉住，
+# 重跑会拉入最新版本，造成依赖漂移）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    xauth xterm xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
 # ─── 用户 ros ────────────────────────────────────────────
 ARG USERNAME=ros
 ARG USER_UID=1000
@@ -125,7 +132,9 @@ RUN echo 'source /opt/ros/humble/setup.bash' >> /home/$USERNAME/.bashrc \
     && echo 'if [ -f /workspace/ros2_ws/perception_demo_ws/install/setup.bash ]; then source /workspace/ros2_ws/perception_demo_ws/install/setup.bash; fi' >> /home/$USERNAME/.bashrc \
     && echo 'export MUJOCO_PATH="${MUJOCO_PATH:-$HOME/mujoco}"' >> /home/$USERNAME/.bashrc \
     && echo 'export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-42}"' >> /home/$USERNAME/.bashrc \
-    && echo 'export DISPLAY="${DISPLAY:-:1}"' >> /home/$USERNAME/.bashrc
+    && echo 'export DISPLAY="${DISPLAY:-:1}"' >> /home/$USERNAME/.bashrc \
+    && echo '# petbot-mujoco-bin' >> /home/$USERNAME/.bashrc \
+    && echo 'export PATH="$MUJOCO_PATH/bin:$PATH"' >> /home/$USERNAME/.bashrc
 
 USER $USERNAME
 WORKDIR /workspace/ros2_ws

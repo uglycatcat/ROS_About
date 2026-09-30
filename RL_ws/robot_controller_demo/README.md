@@ -42,10 +42,9 @@ xterm）；不同 X11 窗口的焦点也会独立检查。
 
 ## macOS 运行
 
-在 macOS 的“终端.app”或 iTerm2 中运行：
+保留原有 macOS 演示入口。在“终端.app”或 iTerm2 中，先激活已配置的独立 MuJoCo Python 环境，再运行：
 
 ```bash
-conda activate robot_env
 cd <项目根目录>/RL_ws/robot_controller_demo
 python main.py
 ```
@@ -118,11 +117,7 @@ python main.py --max-speed 0.25 --max-yaw-rate 1.0
 
 ## 检查
 
-开发容器已提供 MuJoCo 和 NumPy。其他 Python 环境可安装：
-
-```bash
-python -m pip install -r requirements.txt
-```
+依赖清单见 [requirements.txt](requirements.txt)，环境要求与 uv 隔离约定见 [RL 工作区 README](../README.md)。现有镜像提供 MuJoCo 和 NumPy，但其 MuJoCo 版本与依赖清单存在差异，后续应在独立 uv 环境中固定并验证版本；不要向 ROS 自带 Python 安装训练或演示依赖。
 
 在容器的项目根目录运行自动测试：
 

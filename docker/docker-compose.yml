@@ -12,7 +12,10 @@ services:
     volumes:
       - ~/:/workspace:rw
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTH_PATH:-${HOME}/.Xauthority}:/tmp/.Xauthority:ro
+      # X11 认证：挂 /run/user/<uid> 整个运行目录（tmpfs，登录后必存在，只读）。
+      # 不挂单个 Xauthority 文件：挂载源不存在时 docker 会静默建成空目录，
+      # 容器启动即报 not a directory；且单文件挂载钉死 inode，重登录后读不到新 cookie。
+      - /run/user/${USER_UID:-1000}:/host-run:ro
 
     working_dir: /workspace/ros2_ws
 
@@ -35,7 +38,7 @@ services:
       - DISPLAY=${DISPLAY:-:1}
       - QT_X11_NO_MITSHM=1
       - QT_QPA_PLATFORM=xcb
-      - XAUTHORITY=/tmp/.Xauthority
+      - XAUTHORITY=/host-run/gdm/Xauthority
       - NVIDIA_VISIBLE_DEVICES=all
       - NVIDIA_DRIVER_CAPABILITIES=all
       - __GLX_VENDOR_LIBRARY_NAME=nvidia

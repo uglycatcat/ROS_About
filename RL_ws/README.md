@@ -38,7 +38,7 @@
 
 这不是对训练服务器或旧 `petbot_ws` 可写层的检查。下面列出由使用者准备的环境要求；本次没有安装训练环境。
 
-采用以下**复用优先、待实机环境验证的版本基线**：
+建议采用以下**复用优先、待服务器环境验证的版本基线**。这些版本是环境准备建议，尚未完成本项目的安装兼容性验证：
 
 | 组件 | 基线 | 依据 |
 |---|---|---|
@@ -79,7 +79,7 @@ robot_lab v2.3.2 的上游包还声明了 `cusrl[all]`、`pinocchio` 等依赖�
 - 不替换系统 `/usr/bin/python3`，不向 ROS 自带 Python 安装训练包，不使用系统 site-packages。
 - 训练终端避免加载 ROS overlay，并清除继承的 `PYTHONPATH` / `PYTHONHOME`；不用 Conda 环境叠加 uv 训练环境。
 - uv 工具、管理的 Python 和下载缓存可放在 `RL_ws/.tools` / `RL_ws/.uv`；框架源码放在 `RL_ws/third_party`。这些路径只做规划，当前未创建。
-- 后续固定实际 Python 补丁版本和完整依赖版本。当前没有 `pyproject.toml`、`uv.lock` 或经过验证的安装锁文件。
+- 后续固定实际 Python 补丁版本和完整依赖版本。当前尚无 PetBot 训练工程自己的 `pyproject.toml`、`uv.lock` 或经过验证的安装锁文件；参考仓库中的同名文件属于各自上游项目。
 - 训练项目源码、任务配置、文档受本仓库版本管理；虚拟环境、上游 checkout、缓存和训练输出由忽略规则排除。
 
 参考：[uv 管理 Python](https://docs.astral.sh/uv/guides/install-python/)、[uv 虚拟环境](https://docs.astral.sh/uv/pip/environments/)、[Isaac Lab 对 uv 的说明](https://github.com/isaac-sim/IsaacLab/blob/v2.3.2/docs/source/setup/installation/include/pip_python_virtual_env.rst)。
@@ -119,4 +119,4 @@ cd /workspace/ros2_ws/RL_ws
 python -m unittest discover -s robot_controller_demo -v
 ```
 
-原开发容器目前存在图形认证挂载失效问题，见 [Docker 说明](../docker/README.md)。本次文件整理使用同镜像临时容器完成，没有调整原容器的图形配置。
+2026-09-29 检查原开发容器时发现图形认证挂载失效，见 [Docker 说明](../docker/README.md)。当时的目录整理使用同镜像临时容器完成；2026-09-30 的文档检查直接在工作区进行，未使用 Docker，也未复查或调整容器配置。

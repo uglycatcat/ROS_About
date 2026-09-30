@@ -16,21 +16,10 @@ export USER_UID="$(id -u)"
 export USER_GID="$(id -g)"
 export DISPLAY="${DISPLAY:-:1}"
 
-# Xauthority
-if [ -n "${XAUTHORITY:-}" ] && [ -f "$XAUTHORITY" ]; then
-    export XAUTH_PATH="$XAUTHORITY"
-elif [ -f "$HOME/.Xauthority" ]; then
-    export XAUTH_PATH="$HOME/.Xauthority"
-elif [ -f "/run/user/${USER_UID}/gdm/Xauthority" ]; then
-    export XAUTH_PATH="/run/user/${USER_UID}/gdm/Xauthority"
-else
-    export XAUTH_PATH="/tmp/ros2-docker-xauth-empty"
-    touch "$XAUTH_PATH"
-    echo ">>> 警告: 未找到 Xauthority，GUI 可能无法显示"
-fi
-
+# X11 认证：cookie 由 /run/user/<uid> 目录挂载提供（见 docker-compose.yml），
+# 宿主机无需探测路径；这里只额外放行同 uid 的本地连接作为第二通路。
 if command -v xhost >/dev/null 2>&1; then
-    xhost +local: >/dev/null 2>&1 || true
+    xhost +SI:localuser:"$(id -un)" >/dev/null 2>&1 || true
 fi
 
 echo ">>> 构建并启动 (UID=${USER_UID} DISPLAY=${DISPLAY})"

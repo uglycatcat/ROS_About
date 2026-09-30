@@ -49,20 +49,9 @@ echo ">>> 宿主机代理: ${HOST_PROXY}"
 echo ">>> 构建期代理: ${BUILD_PROXY}  (GODEBUG=http2client=0)"
 
 # ─── X11 ────────────────────────────────────────────────
-if [ -n "${XAUTHORITY:-}" ] && [ -f "$XAUTHORITY" ]; then
-    export XAUTH_PATH="$XAUTHORITY"
-elif [ -f "$HOME/.Xauthority" ]; then
-    export XAUTH_PATH="$HOME/.Xauthority"
-elif [ -f "/run/user/${USER_UID}/gdm/Xauthority" ]; then
-    export XAUTH_PATH="/run/user/${USER_UID}/gdm/Xauthority"
-else
-    export XAUTH_PATH="/tmp/ros2-docker-xauth-empty"
-    touch "$XAUTH_PATH"
-    echo ">>> 警告: 未找到 Xauthority，GUI 可能无法显示"
-fi
-
+# cookie 由 /run/user/<uid> 目录挂载提供（见 docker-compose.yml），此处只放行同 uid 的本地连接。
 if command -v xhost >/dev/null 2>&1; then
-    xhost +local: >/dev/null 2>&1 || true
+    xhost +SI:localuser:"$(id -un)" >/dev/null 2>&1 || true
 fi
 
 # ─── 1. 拉取基础镜像 ────────────────────────────────────

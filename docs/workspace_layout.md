@@ -13,7 +13,7 @@
 
 `RL_ws/robot_description` 是自恢复模型来源；`perception_demo_ws/src/petbot_description` 是感知示例使用的另一套描述，二者用途不同。
 
-当前宿主机目录为 `/home/anna/ros2_ws`，开发容器路径为 `/workspace/ros2_ws`。所有项目操作在容器内进行。
+当前宿主机目录为 `/home/anna/ros2_ws`，开发容器路径为 `/workspace/ros2_ws`。模型运行、仿真、训练和测试在容器内进行；纯文档检查可直接在工作区进行。
 
 ## 旧路径映射
 
@@ -40,7 +40,6 @@
 - 忽略：ROS 构建产物、Python 缓存、虚拟环境、训练日志和策略权重。
 - `RL_ws/reference_project/.gitignore` 忽略该目录的所有子目录，参考仓库保留自己的 Git 历史，不作为本仓库的嵌套源码或 submodule 提交。
 - 上游许可证和说明保留在各参考仓库中；克隆不会安装依赖或修改环境。
-- 历史个人讨论笔记继续遵循已有忽略规则。
 - 如未来需要发布演示权重，应单独决定产物存储位置与版本。
 
 上游仓库的实际来源、分支、提交及浅克隆状态见 [参考清单](../RL_ws/reference_project/manifest.json)。
